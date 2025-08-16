@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EnhancedHeader } from "@/components/enhanced-header"
 import { HeroSection } from "@/components/hero-section"
 import { HowItWorksSection } from "@/components/how-it-works-section"
@@ -10,6 +10,7 @@ import { FAQSection } from "@/components/faq-section"
 import { CTASection } from "@/components/cta-section"
 import { Footer } from "@/components/footer"
 import type { Metadata } from "next"
+import { Toast } from 'primereact/toast'
 
 export default function HomePage() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
@@ -20,6 +21,8 @@ export default function HomePage() {
       setDeferredPrompt(e)
     })
   }, [])
+
+  const toast = useRef<Toast>(null);
 
   const handleInstall = async () => {
     if (deferredPrompt) {
@@ -33,6 +36,7 @@ export default function HomePage() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-gray-900">
+      <Toast ref={toast} />
       <EnhancedHeader />
       <HeroSection />
       <HowItWorksSection />

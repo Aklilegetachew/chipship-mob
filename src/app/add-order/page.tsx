@@ -25,6 +25,44 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import OrderHeaderStepper from "@/components/OrderHeaderStepper"
+import StepOneForm from "@/components/StepOneForm"
+import StepTwoProduct from "@/components/StepTwoProduct"
+import Step3Confirmation from "@/components/StepThreeConfirm"
+import axiosClient from "@/lib/axiosClient"
+interface FormData {
+  sender: {
+    name: string;
+    phone: string;
+    address: string;
+    country: string;
+  };
+  receiver: {
+    name: string;
+    phone: string;
+    address: string;
+    country: string;
+  };
+}
+
+type Item = {
+  type: string;
+  description: string;
+  weight: number;
+};
+
+type Step2Data = {
+  items: Item[];
+  shippingType: "fast" | "medium" | "";
+};
+
+type Step3DataType = {
+  paymentMethod: "paypal" | "cash" | "stripe" | "";
+};
+
+type FinalOrderDataType = FormData & Step2Data & Step3DataType;
+
+
 
 export default function NewOrderPage() {
   const [step, setStep] = useState(1)
@@ -44,7 +82,18 @@ export default function NewOrderPage() {
       },
     },
   }
+  const [step1Data, setStep1Data] = useState<FormData>({
+    sender: { name: "", phone: "", address: "", country: "" },
+    receiver: { name: "", phone: "", address: "", country: "" },
+  });
 
+  const [step2Data, setStep2Data] = useState<Step2Data>({
+    items: [],
+    shippingType: "",
+  });
+  const [step3Data, setStep3Data] = useState<Step3DataType>({
+    paymentMethod: "",
+  });
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1 },
@@ -69,51 +118,43 @@ export default function NewOrderPage() {
     { name: "PayPal", icon: Package, selected: false },
   ]
 
+  const handleSubmitOrder = async (finalOrder: FinalOrderDataType) => {
+    try {
+      // Your backend expects keys:
+      // sender, recipient (you called receiver on frontend), packageDetails, shipmentType, paymentMethod, termsAccepted
+      // So transform finalOrder accordingly:
+
+      const payload = {
+        sender: finalOrder.sender,
+        recipient: finalOrder.receiver,  // rename receiver -> recipient for backend
+        packageDetails: {
+          description: finalOrder.items.map(item => item.type).join(", "), // or a better description if you want
+          weight: finalOrder.items.reduce((acc, item) => acc + item.weight, 0), // total weight
+          // optionally dimensions can be added if available
+        },
+        shipmentType: finalOrder.shippingType, // fast, medium (make sure backend accepts these values; you have urgent, fast, mid)
+        paymentMethod: finalOrder.paymentMethod, // cash, paypal, stripe (make sure backend accepts these)
+        termsAccepted: true, // assuming terms accepted in step 3 or earlier
+        items: finalOrder.items // if you want to send raw items array, you might need to add this field in your backend schema
+      };
+
+      const res = await axiosClient.post("/orders", payload);
+
+      console.log("Shipment created:", res.data);
+      alert("Order submitted successfully!");
+
+      // Optionally reset the form or redirect the user
+    } catch (error) {
+      console.error("Error submitting order:", error);
+      alert("Failed to submit order. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-page-background text-text-dark p-4 md:p-6 lg:p-8 flex flex-col">
-      {/* Header */}
-      <motion.header className="flex items-center mb-8" variants={itemVariants}>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleBack}
-          disabled={step === 1}
-          className="text-text-dark hover:text-icon-gray"
-        >
-          <ArrowLeft className="h-6 w-6 mr-2" />
-          <span className="sr-only">Back</span>
-        </Button>
-        <span className="text-lg font-medium ml-2">Back</span>
-      </motion.header>
 
-      {/* Progress Stepper */}
-      <motion.div
-        className="flex items-center justify-between mb-8"
-        variants={itemVariants}
-      >
-        {[1, 2, 3].map((num) => (
-          <div key={num} className="flex flex-col items-center flex-1">
-            <div
-              className={`relative flex items-center justify-center w-16 h-16 rounded-full mb-2 ${
-                step >= num
-                  ? "bg-teal-800 text-white"
-                  : "bg-stepper-inactive-bg text-stepper-inactive-text"
-              }`}
-            >
-              {num === 1 && <ListTodo className="h-8 w-8" />}
-              {num === 2 && <PlusCircle className="h-8 w-8" />}
-              {num === 3 && <FileText className="h-8 w-8" />}
-            </div>
-            <span className="text-sm font-medium text-center text-text-dark">
-              STEP {num}
-              <br />
-              {num === 1 && "Basic Details"}
-              {num === 2 && "Information"}
-              {num === 3 && "Confirmation"}
-            </span>
-          </div>
-        ))}
-      </motion.div>
+
+      <OrderHeaderStepper step={step} onBack={handleBack} />
 
       <AnimatePresence mode="wait">
         {step === 1 && (
@@ -125,280 +166,43 @@ export default function NewOrderPage() {
             exit="exit"
             className="flex flex-col flex-grow"
           >
-            {/* Sender Details */}
-            <motion.h2
-              className="text-xl font-bold text-text-dark mb-4"
-              variants={itemVariants}
-            >
-              Sender details
-            </motion.h2>
-            <motion.div
-              className="bg-card-light rounded-2xl shadow-md p-6 mb-6"
-              variants={itemVariants}
-            >
-              <Input
-                type="text"
-                placeholder="Enter sender name"
-                className="mb-4 bg-input-light border-none text-text-dark placeholder:text-text-light-gray"
-              />
-              <Input
-                type="tel"
-                placeholder="Enter sender phone"
-                className="mb-4 bg-input-light border-none text-text-dark placeholder:text-text-light-gray"
-              />
-              <Input
-                type="text"
-                placeholder="Sender remarks"
-                className="bg-input-light border-none text-text-dark placeholder:text-text-light-gray"
-              />
-            </motion.div>
-
-            {/* Receiver Details */}
-            <motion.h2
-              className="text-xl font-bold text-text-dark mb-4"
-              variants={itemVariants}
-            >
-              Receiver details
-            </motion.h2>
-            <motion.div
-              className="bg-card-light rounded-2xl shadow-md p-6 mb-6"
-              variants={itemVariants}
-            >
-              <Input
-                type="text"
-                placeholder="Enter receiver name"
-                className="mb-4 bg-input-light border-none text-text-dark placeholder:text-text-light-gray"
-              />
-              <Input
-                type="tel"
-                placeholder="Enter receiver phone"
-                className="mb-4 bg-input-light border-none text-text-dark placeholder:text-text-light-gray"
-              />
-              <Input
-                type="text"
-                placeholder="Sender remarks"
-                className="bg-input-light border-none text-text-dark placeholder:text-text-light-gray"
-              />
-              <div className="flex justify-end text-text-light-gray text-sm mt-2">
-                Save for later
-              </div>
-            </motion.div>
-
-            {/* Choose Type */}
-            <motion.h2
-              className="text-xl font-bold text-text-dark mb-4"
-              variants={itemVariants}
-            >
-              Choose type
-            </motion.h2>
-            <motion.div
-              className="grid grid-cols-3 gap-3 mb-6"
-              variants={itemVariants}
-            >
-              {itemTypes.map(({ name, icon: Icon }) => (
-                <Button
-                  key={name}
-                  variant="outline"
-                  className="bg-card-light text-text-dark border-border-light hover:bg-gray-100 rounded-full px-4 py-2 text-sm"
-                >
-                  <Icon className="h-4 w-4 mr-1" />
-                  {name}
-                </Button>
-              ))}
-            </motion.div>
-
-            {/* Bottom Bar */}
-            <motion.div
-              className="flex justify-between items-center bg-card-light rounded-t-2xl p-4 mt-auto shadow-lg"
-              variants={itemVariants}
-            >
-              <div>
-                <p className="text-sm text-text-light-gray">
-                  Total (incl. VAT)
-                </p>
-                <p className="text-2xl font-bold text-primary-green">$2.00</p>
-              </div>
-              <Button
-                className="bg-teal-800 text-white rounded-full px-8 py-4 text-base font-semibold hover:bg-teal-400-hover"
-                onClick={handleNext}
-              >
-                Process Next
-              </Button>
-            </motion.div>
+            <StepOneForm
+              onNext={(data) => {
+                console.log("Step 1 data:", data);
+                setStep1Data(data);
+                handleNext();
+              }}
+            />
           </motion.div>
         )}
 
         {step === 2 && (
-          <motion.div
-            key="step2"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            className="flex flex-col flex-grow"
-          >
-            {/* Address Details Section */}
-            <motion.h2
-              className="text-xl font-bold text-text-dark mb-4"
-              variants={itemVariants}
-            >
-              Address details
-            </motion.h2>
-            <motion.div
-              className="bg-card-light text-text-dark rounded-2xl shadow-md p-6 mb-6"
-              variants={itemVariants}
-            >
-              <div className="flex relative pb-6">
-                <div className="flex flex-col items-center mr-4">
-                  <MapPin className="h-6 w-6 text-teal-400" />
-                  <div className="border-l-2 border-dashed border-border-light h-full my-2"></div>
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-1">
-                        Collect from
-                      </h3>
-                      <p className="text-icon-gray text-sm mb-2">
-                        Sender address
-                      </p>
-                      <p className="text-text-dark text-base">
-                        Kilometer 6, 278H, Street 201R, Kroalkor Village,
-                        Unnamed Road, Phnom Penh
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-icon-gray hover:text-text-dark"
-                    >
-                      <Pencil className="h-5 w-5" />
-                      <span className="sr-only">Edit sender address</span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
+          <StepTwoProduct
+            savedData={step2Data}
+            onNext={(data) => {
+              setStep2Data(data);
+              setStep(3);
+            }} />
+        )}
 
-              <div className="flex relative">
-                <div className="flex flex-col items-center mr-4">
-                  <MapPin className="h-6 w-6 text-teal-400" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-1">
-                        Delivery to
-                      </h3>
-                      <p className="text-icon-gray text-sm mb-2">
-                        Receiver address
-                      </p>
-                      <p className="text-text-dark text-base">
-                        2nd Floor 01, 25 Mao Tse Toung Blvd (245), Phnom Penh
-                        12302, Cambodia
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="text-icon-gray hover:text-text-dark"
-                    >
-                      <Pencil className="h-5 w-5" />
-                      <span className="sr-only">Edit receiver address</span>
-                    </Button>
-                  </div>
-                </div>
-              </div>
 
-              <Button
-                variant="outline"
-                className="mt-6 w-full bg-input-light text-primary-green border-teal-400 rounded-full px-6 py-3 text-base font-semibold hover:bg-gray-200"
-              >
-                <Clock className="h-5 w-5 mr-2" />
-                Take around 20 min
-              </Button>
-            </motion.div>
+        {step === 3 && (
+          <Step3Confirmation
+            step1Data={step1Data}
+            step2Data={step2Data}
+            data={step3Data}
+            onSubmit={(data) => {
+              const finalOrder: FinalOrderDataType = {
+                ...step1Data,
+                ...step2Data,
+                ...data,
+              };
+              console.log("Final Order Data:", finalOrder);
+              handleSubmitOrder(finalOrder);
+            }}
 
-            {/* Payment Method Section */}
-            <motion.h2
-              className="text-xl font-bold text-text-dark mb-4"
-              variants={itemVariants}
-            >
-              Payment method
-            </motion.h2>
-            <motion.div
-              className="bg-card-light rounded-2xl shadow-md p-6 mb-6"
-              variants={itemVariants}
-            >
-              {paymentMethods.map((method) => (
-                <div
-                  key={method.name}
-                  className="flex items-center justify-between py-3 border-b border-border-medium last:border-b-0"
-                >
-                  <div className="flex items-center">
-                    {method.icon && (
-                      <method.icon className="h-6 w-6 mr-3 text-icon-gray" />
-                    )}
-                    <span className="text-lg font-medium text-text-dark">
-                      {method.name}
-                    </span>
-                  </div>
-                  {method.selected ? (
-                    <CheckCircle className="h-6 w-6 text-primary-green" />
-                  ) : (
-                    <Circle className="h-6 w-6 text-icon-gray" />
-                  )}
-                </div>
-              ))}
-            </motion.div>
 
-            {/* Order Summary Section */}
-            <motion.h2
-              className="text-xl font-bold text-text-dark mb-4"
-              variants={itemVariants}
-            >
-              Order summary
-            </motion.h2>
-            <motion.div
-              className="bg-card-light rounded-2xl shadow-md p-6 mb-6"
-              variants={itemVariants}
-            >
-              <div className="flex justify-between mb-2">
-                <span className="text-icon-gray">Size</span>
-                <span className="text-text-dark">20 cm</span>
-              </div>
-              <div className="flex justify-between mb-2">
-                <span className="text-icon-gray">Type</span>
-                <span className="text-text-dark">Cosmetic</span>
-              </div>
-              <div className="flex justify-between mb-2">
-                <span className="text-icon-gray">Collect time</span>
-                <span className="text-text-dark">Express</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-icon-gray">Delivery</span>
-                <span className="text-text-dark">$2.00</span>
-              </div>
-            </motion.div>
-
-            {/* Bottom Bar */}
-            <motion.div
-              className="flex justify-between items-center bg-card-light rounded-t-2xl p-4 mt-auto shadow-lg"
-              variants={itemVariants}
-            >
-              <div>
-                <p className="text-sm text-text-light-gray">
-                  Total (incl. VAT)
-                </p>
-                <p className="text-2xl font-bold text-primary-green">$2.00</p>
-              </div>
-              <Button
-                className="bg-teal-800 text-white rounded-full px-8 py-4 text-base font-semibold hover:bg-primary-green-hover"
-                onClick={() => alert("Order Submitted!")} // Placeholder for submit action
-              >
-                Submit
-              </Button>
-            </motion.div>
-          </motion.div>
+          />
         )}
       </AnimatePresence>
     </div>

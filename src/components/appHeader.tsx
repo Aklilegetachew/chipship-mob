@@ -36,9 +36,9 @@ export function AppHeader() {
           <span className="sr-only">Search</span>
         </Button>
       </header>
-      <AnimatePresence>
+      {/* <AnimatePresence>
         <Sidebar isOpen={isSidebarOpen} onClose={toggleSidebar} />
-      </AnimatePresence>
+      </AnimatePresence> */}
     </>
   )
 }
