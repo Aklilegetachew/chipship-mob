@@ -32,37 +32,35 @@ import Step3Confirmation from "@/components/StepThreeConfirm"
 import axiosClient from "@/lib/axiosClient"
 interface FormData {
   sender: {
-    name: string;
-    phone: string;
-    address: string;
-    country: string;
-  };
+    name: string
+    phone: string
+    address: string
+    country: string
+  }
   receiver: {
-    name: string;
-    phone: string;
-    address: string;
-    country: string;
-  };
+    name: string
+    phone: string
+    address: string
+    country: string
+  }
 }
 
 type Item = {
-  type: string;
-  description: string;
-  weight: number;
-};
+  type: string
+  description: string
+  weight: number
+}
 
 type Step2Data = {
-  items: Item[];
-  shippingType: "fast" | "medium" | "";
-};
+  items: Item[]
+  shippingType: "fast" | "medium" | ""
+}
 
 type Step3DataType = {
-  paymentMethod: "paypal" | "cash" | "stripe" | "";
-};
+  paymentMethod: "paypal" | "cash" | "stripe" | ""
+}
 
-type FinalOrderDataType = FormData & Step2Data & Step3DataType;
-
-
+type FinalOrderDataType = FormData & Step2Data & Step3DataType
 
 export default function NewOrderPage() {
   const [step, setStep] = useState(1)
@@ -85,15 +83,15 @@ export default function NewOrderPage() {
   const [step1Data, setStep1Data] = useState<FormData>({
     sender: { name: "", phone: "", address: "", country: "" },
     receiver: { name: "", phone: "", address: "", country: "" },
-  });
+  })
 
   const [step2Data, setStep2Data] = useState<Step2Data>({
     items: [],
     shippingType: "",
-  });
+  })
   const [step3Data, setStep3Data] = useState<Step3DataType>({
     paymentMethod: "",
-  });
+  })
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
     visible: { y: 0, opacity: 1 },
@@ -126,34 +124,32 @@ export default function NewOrderPage() {
 
       const payload = {
         sender: finalOrder.sender,
-        recipient: finalOrder.receiver,  // rename receiver -> recipient for backend
+        recipient: finalOrder.receiver, // rename receiver -> recipient for backend
         packageDetails: {
-          description: finalOrder.items.map(item => item.type).join(", "), // or a better description if you want
+          description: finalOrder.items.map((item) => item.type).join(", "), // or a better description if you want
           weight: finalOrder.items.reduce((acc, item) => acc + item.weight, 0), // total weight
           // optionally dimensions can be added if available
         },
         shipmentType: finalOrder.shippingType, // fast, medium (make sure backend accepts these values; you have urgent, fast, mid)
         paymentMethod: finalOrder.paymentMethod, // cash, paypal, stripe (make sure backend accepts these)
         termsAccepted: true, // assuming terms accepted in step 3 or earlier
-        items: finalOrder.items // if you want to send raw items array, you might need to add this field in your backend schema
-      };
+        items: finalOrder.items, // if you want to send raw items array, you might need to add this field in your backend schema
+      }
 
-      const res = await axiosClient.post("/orders", payload);
+      const res = await axiosClient.post("/orders", payload)
 
-      console.log("Shipment created:", res.data);
-      alert("Order submitted successfully!");
+      console.log("Shipment created:", res.data)
+      alert("Order submitted successfully!")
 
       // Optionally reset the form or redirect the user
     } catch (error) {
-      console.error("Error submitting order:", error);
-      alert("Failed to submit order. Please try again.");
+      console.error("Error submitting order:", error)
+      alert("Failed to submit order. Please try again.")
     }
-  };
+  }
 
   return (
     <div className="min-h-screen bg-page-background text-text-dark p-4 md:p-6 lg:p-8 flex flex-col">
-
-
       <OrderHeaderStepper step={step} onBack={handleBack} />
 
       <AnimatePresence mode="wait">
@@ -168,9 +164,9 @@ export default function NewOrderPage() {
           >
             <StepOneForm
               onNext={(data) => {
-                console.log("Step 1 data:", data);
-                setStep1Data(data);
-                handleNext();
+                console.log("Step 1 data:", data)
+                setStep1Data(data)
+                handleNext()
               }}
             />
           </motion.div>
@@ -180,11 +176,11 @@ export default function NewOrderPage() {
           <StepTwoProduct
             savedData={step2Data}
             onNext={(data) => {
-              setStep2Data(data);
-              setStep(3);
-            }} />
+              setStep2Data(data)
+              setStep(3)
+            }}
+          />
         )}
-
 
         {step === 3 && (
           <Step3Confirmation
@@ -196,12 +192,10 @@ export default function NewOrderPage() {
                 ...step1Data,
                 ...step2Data,
                 ...data,
-              };
-              console.log("Final Order Data:", finalOrder);
-              handleSubmitOrder(finalOrder);
+              }
+              console.log("Final Order Data:", finalOrder)
+              handleSubmitOrder(finalOrder)
             }}
-
-
           />
         )}
       </AnimatePresence>
