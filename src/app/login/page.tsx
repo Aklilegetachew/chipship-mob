@@ -141,13 +141,13 @@ export default function LoginPage() {
 
               {/* Sign In Button */}
               <div className="mt-8">
-                <Button type="submit" label={isLoading ? "Signing In..." : "Sign In"} loading={isLoading} className="w-full" />
+                <Button type="submit" label={isLoading ? "Signing In..." : "Sign In"} loading={isLoading} className="w-full !bg-teal-600" />
               </div>
 
               {/* Google Sign In */}
               <div className="mt-4">
                 <Button type="button" onClick={handleGoogleSignIn} icon="pi pi-google"
-                  label="Sign in with Google" className="w-full p-button-outlined" />
+                  label="Sign in with Google" className="w-full h-12 !bg-white hover:!bg-teal-50 !border-2 !border-teal-600 hover:!border-teal-700 !text-teal-600 hover:!text-teal-700 rounded-lg font-semibold shadow-sm hover:shadow-md transition-all duration-200" />
               </div>
 
               {/* Sign Up Link */}

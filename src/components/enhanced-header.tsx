@@ -201,8 +201,8 @@ export function EnhancedHeader() {
                       </Button>
                     </Link>
                   )}
-                  {pathname !== "/register" && pathname !== "/dashboard" && (
-                    <Link href="/register" className="w-full">
+                  {pathname !== "/signup" && pathname !== "/dashboard" && (
+                    <Link href="/signup" className="w-full">
                       <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-full">
                         Sign Up
                       </Button>

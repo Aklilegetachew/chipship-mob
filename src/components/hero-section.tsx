@@ -52,7 +52,7 @@ export function HeroSection() {
           >
             <div className="relative w-full h-96 flex items-center justify-center">
               <img
-                src="/ship.png"
+                src="/luggage.png"
                 alt="ChipShip connecting travelers and senders globally"
                 className="w-full h-full object-contain"
               />

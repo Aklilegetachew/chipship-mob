@@ -4,6 +4,9 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import Select from "react-select";
 import { getNames } from "country-list";
+import { ArrowBigRight, ArrowRight } from "lucide-react";
+import { Button } from "./ui/button";
+
 
 interface FormData {
     sender: {
@@ -185,17 +188,18 @@ export default function StepOneForm({ onNext }: StepOneFormProps) {
             </div>
 
             {/* Bottom Bar */}
-            <div className="flex justify-between items-center bg-card-light rounded-t-2xl p-4 mt-auto shadow-lg">
-                <div>
-                    <p className="text-sm text-text-light-gray">Total (incl. VAT)</p>
-                    <p className="text-2xl font-bold text-primary-green">$2.00</p>
-                </div>
-                <button
+            <div className="flex justify-end items-center bg-card-light rounded-t-2xl p-4 mt-auto shadow-lg">
+
+                <Button
                     type="submit"
-                    className="bg-teal-800 text-white rounded-full px-8 py-4 text-base font-semibold hover:bg-teal-400-hover"
+                    size="lg"
+                    className="!bg-teal-600 text-primary-foreground hover:bg-teal-600/90"
                 >
+                    <ArrowRight className="h-4 w-4 mr-2" />
                     Process Next
-                </button>
+                </Button>
+
+
             </div>
         </form>
     );
