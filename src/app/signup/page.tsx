@@ -9,7 +9,8 @@ import { createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth"
 import { auth, provider } from "@/lib/firebase"
 import { useRef, useState } from "react"
 import axiosClient from "@/lib/axiosClient"
-import { useToast } from "@/context/ToastContext";
+import { useToast } from "@/context/ToastContext"
+import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
   const [name, setName] = useState("")
@@ -18,8 +19,8 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-  const { showSuccess, showError } = useToast();
-
+  const { showSuccess, showError } = useToast()
+  const router = useRouter()
   const validatePassword = (password: string) => {
     const minLength = 8
     const hasUpperCase = /[A-Z]/.test(password)
@@ -50,86 +51,85 @@ export default function SignupPage() {
     visible: { y: 0, opacity: 1 },
   }
 
-
-
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+    e.preventDefault()
+    setError("")
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
+      setError("Passwords do not match")
+      return
     }
 
-    const passwordError = validatePassword(password);
+    const passwordError = validatePassword(password)
     if (passwordError) {
-      setError(passwordError);
-      return;
+      setError(passwordError)
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
     try {
       // Step 1: Create Firebase account
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Step 2: Call backend API — axiosClient adds token automatically
-      await axiosClient.post("/auth/signup", {
-        name, // backend can get uid and email from token
-      });
-
-      console.log("Signed up:", user.uid, user.email);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      )
+      const user = userCredential.user
+      const token = await user.getIdToken()
+      const response = await axiosClient.post("/auth/signup", {
+        name,
+        token,
+      })
+      showSuccess("Signed up successfully", "Welcome to our platform!")
       // redirect after signup
+      router.push("/home")
     } catch (err: any) {
-      console.error("Signup error:", err);
-      switch (err.code) {
-        case "auth/email-already-in-use":
-          setError("This email is already registered. Try logging in instead.");
-          break;
-        case "auth/weak-password":
-          setError("Password is too weak. Please choose a stronger password.");
-          break;
-        case "auth/invalid-email":
-          setError("Please enter a valid email address.");
-          break;
-        default:
-          setError(err.response?.data?.message || "Failed to create account. Please try again.");
+      if (err.code === "auth/email-already-in-use") {
+        setError("Email already registered")
+        showError("Signup Failed", "Email already registered")
+      } else if (err.code === "auth/invalid-email") {
+        setError("Invalid email format")
+        showError("Signup Failed", "Invalid email format")
+      } else {
+        setError("Unexpected authentication error")
+        showError("Signup Failed", "Unexpected authentication error")
       }
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-
-
+  }
 
   const handleGoogleSignup = async () => {
-    // setLoading(true);
-    // setError("");
-
-    showSuccess("Signed up successfully", "Welcome to our platform!");
+    showSuccess("Signed up successfully", "Welcome to our platform!")
     try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      // Get the Firebase ID token from the signed-in user
-      const token = await user.getIdToken();
-      // Send the token to your backend signup API
-      const response = await axiosClient.post("/auth/signup", { token });
-      console.log("Backend response:", response.data);
-      showSuccess("Signed up successfully", "Welcome to our platform!");
+      const result = await signInWithPopup(auth, provider)
 
-
-      // Optionally redirect after successful signup
-      // router.push("/dashboard");
+      const user = result.user
+      const token = await user.getIdToken()
+      await axiosClient.post("/auth/signup", { token })
+      showSuccess("Signed up successfully", "Welcome to our platform!")
+      router.push("/home")
     } catch (err: any) {
-      console.log("Google signup error:", err.response?.data?.message);
+      if (err.code === "auth/email-already-exists") {
+        setError("Email already registered")
+        showError("Signup Failed", "Email already registered")
+      } else if (err.code === "auth/invalid-email") {
+        setError("Invalid email format")
+        showError("Signup Failed", "Invalid email format")
+      } else {
+        setError("Unexpected authentication error")
+        showError("Signup Failed", "Unexpected authentication error")
+      }
 
-      showError("Signup Failed", err.response?.data?.message || "Failed to sign up with Google. Please try again.");
-
+      showError(
+        "Signup Failed",
+        err.response?.data?.message ||
+          "Failed to sign up with Google. Please try again."
+      )
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
-
+  }
 
   return (
     <motion.div
@@ -137,7 +137,6 @@ export default function SignupPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
     >
-
       <Card className="w-full max-w-md rounded-2xl shadow-lg bg-white text-gray-900">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold mb-2">Sign Up</CardTitle>
@@ -227,5 +226,3 @@ export default function SignupPage() {
     </motion.div>
   )
 }
-
-

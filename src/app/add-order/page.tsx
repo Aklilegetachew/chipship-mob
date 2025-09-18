@@ -23,13 +23,12 @@ import {
   Circle,
 } from "lucide-react"
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import OrderHeaderStepper from "@/components/OrderHeaderStepper"
 import StepOneForm from "@/components/StepOneForm"
 import StepTwoProduct from "@/components/StepTwoProduct"
 import Step3Confirmation from "@/components/StepThreeConfirm"
 import axiosClient from "@/lib/axiosClient"
+import { useToast } from "@/context/ToastContext"
 interface FormData {
   sender: {
     name: string
@@ -53,11 +52,11 @@ type Item = {
 
 type Step2Data = {
   items: Item[]
-  shippingType: "fast" | "medium" | ""
+  shippingType: "FAST" | "MEDIUM" | ""
 }
 
 type Step3DataType = {
-  paymentMethod: "paypal" | "cash" | "stripe" | ""
+  paymentMethod: "PAYPAL" | "CASH" | "STRIPE" | ""
 }
 
 type FinalOrderDataType = FormData & Step2Data & Step3DataType
@@ -99,7 +98,7 @@ export default function NewOrderPage() {
 
   const handleNext = () => setStep((prev) => prev + 1)
   const handleBack = () => setStep((prev) => prev - 1)
-
+  const { showSuccess, showError } = useToast()
   const itemTypes = [
     { name: "Book", icon: Book },
     { name: "Goods", icon: ShoppingBag },
@@ -118,33 +117,28 @@ export default function NewOrderPage() {
 
   const handleSubmitOrder = async (finalOrder: FinalOrderDataType) => {
     try {
-      // Your backend expects keys:
-      // sender, recipient (you called receiver on frontend), packageDetails, shipmentType, paymentMethod, termsAccepted
-      // So transform finalOrder accordingly:
-
       const payload = {
         sender: finalOrder.sender,
-        recipient: finalOrder.receiver, // rename receiver -> recipient for backend
+        recipient: finalOrder.receiver,
         packageDetails: {
-          description: finalOrder.items.map((item) => item.type).join(", "), // or a better description if you want
-          weight: finalOrder.items.reduce((acc, item) => acc + item.weight, 0), // total weight
-          // optionally dimensions can be added if available
+          description: finalOrder.items.map((item) => item.type).join(", "),
+          weight: finalOrder.items.reduce((acc, item) => acc + item.weight, 0),
         },
-        shipmentType: finalOrder.shippingType, // fast, medium (make sure backend accepts these values; you have urgent, fast, mid)
-        paymentMethod: finalOrder.paymentMethod, // cash, paypal, stripe (make sure backend accepts these)
-        termsAccepted: true, // assuming terms accepted in step 3 or earlier
-        items: finalOrder.items, // if you want to send raw items array, you might need to add this field in your backend schema
+        shipmentType: finalOrder.shippingType,
+        paymentMethod: finalOrder.paymentMethod,
+        termsAccepted: true,
+        items: finalOrder.items,
       }
 
-      const res = await axiosClient.post("/orders", payload)
+      const res = await axiosClient.post("/order", payload)
 
-      console.log("Shipment created:", res.data)
-      alert("Order submitted successfully!")
+      console.log("Shipment created:", payload)
 
-      // Optionally reset the form or redirect the user
+      showSuccess("Order submitted successfully!")
+
     } catch (error) {
       console.error("Error submitting order:", error)
-      alert("Failed to submit order. Please try again.")
+      showError("Failed to submit order. Please try again.")
     }
   }
 
@@ -201,4 +195,7 @@ export default function NewOrderPage() {
       </AnimatePresence>
     </div>
   )
+}
+function showSuccess(arg0: string, arg1: string) {
+  throw new Error("Function not implemented.")
 }

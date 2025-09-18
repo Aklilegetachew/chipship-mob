@@ -11,7 +11,7 @@ export type Item = {
   weight: number
 }
 
-export type ShippingType = "fast" | "medium" | ""
+export type ShippingType = "FAST" | "MEDIUM" | ""
 
 export type Step2Data = {
   items: Item[]
@@ -151,14 +151,14 @@ export default function StepTwoProduct({ savedData, onNext }: StepTwoProductProp
             <input
               type="radio"
               name="shipping"
-              value="fast"
-              checked={shippingType === "fast"}
-              onChange={() => setShippingType("fast")}
+              value="FAST"
+              checked={shippingType === "FAST"}
+              onChange={() => setShippingType("FAST")}
               className="sr-only"
             />
             <div
               className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                shippingType === "fast"
+                shippingType === "FAST"
                   ? "border-teal-600 bg-teal-50 ring-2 ring-teal-200"
                   : "border-gray-200 hover:border-gray-300"
               }`}
@@ -170,10 +170,10 @@ export default function StepTwoProduct({ savedData, onNext }: StepTwoProductProp
                 </div>
                 <div
                   className={`w-4 h-4 rounded-full border-2 ${
-                    shippingType === "fast" ? "border-teal-600 bg-teal-600" : "border-gray-300"
+                    shippingType === "FAST" ? "border-teal-600 bg-teal-600" : "border-gray-300"
                   }`}
                 >
-                  {shippingType === "fast" && <div className="w-full h-full rounded-full bg-white scale-50"></div>}
+                  {shippingType === "FAST" && <div className="w-full h-full rounded-full bg-white scale-50"></div>}
                 </div>
               </div>
             </div>
@@ -182,14 +182,14 @@ export default function StepTwoProduct({ savedData, onNext }: StepTwoProductProp
             <input
               type="radio"
               name="shipping"
-              value="medium"
-              checked={shippingType === "medium"}
-              onChange={() => setShippingType("medium")}
+              value="MEDIUM"
+              checked={shippingType === "MEDIUM"}
+              onChange={() => setShippingType("MEDIUM")}
               className="sr-only"
             />
             <div
               className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                shippingType === "medium"
+                shippingType === "MEDIUM"
                   ? "border-teal-600 bg-teal-50 ring-2 ring-teal-200"
                   : "border-gray-200 hover:border-gray-300"
               }`}
@@ -201,10 +201,10 @@ export default function StepTwoProduct({ savedData, onNext }: StepTwoProductProp
                 </div>
                 <div
                   className={`w-4 h-4 rounded-full border-2 ${
-                    shippingType === "medium" ? "border-teal-600 bg-teal-600" : "border-gray-300"
+                    shippingType === "MEDIUM" ? "border-teal-600 bg-teal-600" : "border-gray-300"
                   }`}
                 >
-                  {shippingType === "medium" && <div className="w-full h-full rounded-full bg-white scale-50"></div>}
+                  {shippingType === "MEDIUM" && <div className="w-full h-full rounded-full bg-white scale-50"></div>}
                 </div>
               </div>
             </div>
