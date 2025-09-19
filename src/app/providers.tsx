@@ -1,4 +1,4 @@
-// app/providers.tsx (or inside _app.tsx if using pages router)
+
 "use client"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"

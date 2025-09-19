@@ -1,123 +1,92 @@
-import { Package, Search, Clock, Plus, Truck, History } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import Link from "next/link"
+"use client"
+import { Card, CardContent } from "@/components/ui/card"
+import { Clock, Package, Truck } from "lucide-react"
+import { useOrders } from "../queries/order/order"
+import { MobileHeader } from "@/components/app-header"
+import { MobileFooter } from "@/components/app-footer"
 
 export default function HomePage() {
+  const { data: orders = [], isLoading, isError } = useOrders()
+
+  const deliveredCount = orders.filter(
+    (o: any) => o.status === "DELIVERED"
+  ).length
+  const inTransitCount = orders.filter(
+    (o: any) => o.status === "IN_TRANSIT"
+  ).length
+  const thisMonthCount = orders.filter((o: any) => {
+    const created = new Date(o.createdAt)
+    const now = new Date()
+    return (
+      created.getMonth() === now.getMonth() &&
+      created.getFullYear() === now.getFullYear()
+    )
+  }).length
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Package className="h-8 w-8 text-primary" />
-              <h1 className="text-xl font-semibold text-foreground">ShipFast</h1>
-            </div>
-            <Link href="/add-order">
-              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Place Order
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MobileHeader />
 
-      {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 pb-20 md:pb-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-2">Welcome back!</h2>
-          <p className="text-muted-foreground">Manage your shipments with ease</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            Welcome back!
+          </h2>
+          <p className="text-muted-foreground">
+            Manage your shipments with ease
+          </p>
         </div>
 
-        {/* Quick Actions Grid */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
-          {/* Place Order Card */}
-          <Card className="border-border hover:shadow-lg transition-shadow cursor-pointer group">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                  <Plus className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Place Order</CardTitle>
-                  <CardDescription>Create a new shipment</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Link href="/add-order">
-                <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">Start New Order</Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          {/* Track Shipment Card */}
-          <Card className="border-border hover:shadow-lg transition-shadow cursor-pointer group">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-secondary/10 group-hover:bg-secondary/20 transition-colors">
-                  <Search className="h-6 w-6 text-secondary" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Track Shipment</CardTitle>
-                  <CardDescription>Monitor your packages</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button
-                variant="outline"
-                className="w-full border-secondary text-secondary hover:bg-secondary/10 bg-transparent"
-              >
-                Track Package
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* View History Card */}
-          <Card className="border-border hover:shadow-lg transition-shadow cursor-pointer group md:col-span-2 lg:col-span-1">
-            <CardHeader className="pb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                  <History className="h-6 w-6 text-accent" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">View History</CardTitle>
-                  <CardDescription>See past shipments</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full border-accent text-accent hover:bg-accent/10 bg-transparent">
-                View All Orders
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Activity Section */}
+        {/* Recent Activity */}
         <div className="mb-8">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Recent Activity</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">
+            Recent Activity
+          </h3>
           <Card className="border-border">
             <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="p-2 rounded-lg bg-muted">
-                  <Truck className="h-5 w-5 text-muted-foreground" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-foreground">Package #SP-2024-001</p>
-                  <p className="text-sm text-muted-foreground">Delivered to New York, NY</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">2 hours ago</p>
-                  <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800">
-                    Delivered
-                  </span>
-                </div>
-              </div>
+              {isLoading ? (
+                <p className="text-muted-foreground">Loading...</p>
+              ) : isError ? (
+                <p className="text-red-500">Failed to load orders</p>
+              ) : orders.length === 0 ? (
+                <p className="text-muted-foreground">No recent activity</p>
+              ) : (
+                orders.slice(0, 3).map((order: any) => (
+                  <div
+                    key={order.id}
+                    className="flex items-center gap-4 mb-4 last:mb-0"
+                  >
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Truck className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">
+                        {order.packageDescription}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Delivered to {order.recipientAddress}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                          order.status === "DELIVERED"
+                            ? "bg-green-100 text-green-800"
+                            : order.status === "IN_TRANSIT"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {order.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </div>
@@ -128,9 +97,13 @@ export default function HomePage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">In Transit</span>
+                <span className="text-sm text-muted-foreground">
+                  In Transit
+                </span>
               </div>
-              <p className="text-2xl font-bold text-foreground mt-1">3</p>
+              <p className="text-2xl font-bold text-foreground mt-1">
+                {inTransitCount}
+              </p>
             </CardContent>
           </Card>
 
@@ -138,9 +111,13 @@ export default function HomePage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
                 <Package className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">This Month</span>
+                <span className="text-sm text-muted-foreground">
+                  This Month
+                </span>
               </div>
-              <p className="text-2xl font-bold text-foreground mt-1">12</p>
+              <p className="text-2xl font-bold text-foreground mt-1">
+                {thisMonthCount}
+              </p>
             </CardContent>
           </Card>
 
@@ -150,11 +127,15 @@ export default function HomePage() {
                 <Truck className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm text-muted-foreground">Delivered</span>
               </div>
-              <p className="text-2xl font-bold text-foreground mt-1">47</p>
+              <p className="text-2xl font-bold text-foreground mt-1">
+                {deliveredCount}
+              </p>
             </CardContent>
           </Card>
         </div>
       </main>
+
+      <MobileFooter />
     </div>
   )
 }

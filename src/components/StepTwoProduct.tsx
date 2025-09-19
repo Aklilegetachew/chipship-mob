@@ -3,7 +3,8 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
-import { Trash2, Package, Truck } from "lucide-react"
+import { Trash2, Package, Truck, ArrowRight } from "lucide-react"
+import { useCalculatePrice } from "@/app/queries/payment/payment.query"
 
 export type Item = {
   type: string
@@ -23,19 +24,22 @@ interface StepTwoProductProps {
   onNext: (data: Step2Data) => void
 }
 
-export default function StepTwoProduct({ savedData, onNext }: StepTwoProductProps) {
+export default function StepTwoProduct({
+  savedData,
+  onNext,
+}: StepTwoProductProps) {
   const [items, setItems] = useState<Item[]>(savedData.items || [])
-  const [shippingType, setShippingType] = useState<ShippingType>(savedData.shippingType || "")
+  const [shippingType, setShippingType] = useState<ShippingType>(
+    savedData.shippingType || ""
+  )
 
   const itemTypes = [
-    { name: "Book" },
-    { name: "Goods" },
-    { name: "Cosmetics" },
-    { name: "Electronic" },
-    { name: "Medicine" },
-    { name: "Computer" },
-    { name: "Smartphone" },
-    { name: "other" },
+    { name: "general" },
+    { name: "fragile" },
+    { name: "electronics" },
+    { name: "valuable" },
+    { name: "bulky" },
+    { name: "perishable" },
   ]
 
   function handleAddItem(type: string) {
@@ -43,7 +47,11 @@ export default function StepTwoProduct({ savedData, onNext }: StepTwoProductProp
     setItems([...items, { type, description: "", weight: 0 }])
   }
 
-  function handleChangeItem(index: number, field: keyof Item, value: string | number) {
+  function handleChangeItem(
+    index: number,
+    field: keyof Item,
+    value: string | number
+  ) {
     const updated = [...items]
     updated[index] = { ...updated[index], [field]: value }
     setItems(updated)
@@ -54,170 +62,258 @@ export default function StepTwoProduct({ savedData, onNext }: StepTwoProductProp
     onNext({ items, shippingType })
   }
 
+  const { data: totalPrice, isLoading: loadingPrice } = useCalculatePrice(
+    items,
+    items.length > 0
+  )
+
   return (
-    <motion.div
-      className="max-w-2xl mx-auto p-6 space-y-8"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold text-gray-900">Add Your Items</h2>
-        <p className="text-gray-600">Select item types and provide details for shipping</p>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Package className="w-5 h-5 text-teal-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Choose Item Types</h3>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {itemTypes.map(({ name }) => (
-            <Button
-              key={name}
-              variant="outline"
-              className="h-12 rounded-lg border-2 border-gray-200 hover:border-teal-600 hover:bg-teal-50 hover:text-teal-700 transition-all duration-200 font-medium bg-transparent"
-              onClick={() => handleAddItem(name)}
-            >
-              {name}
-            </Button>
-          ))}
-        </div>
-        {items.length > 0 && <p className="text-sm text-gray-500">{items.length}/6 items added</p>}
-      </div>
-
-      {items.length > 0 && (
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-gray-900">Item Details</h3>
-          <div className="space-y-3">
-            {items.map((item, idx) => (
-              <motion.div
-                key={idx}
-                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-200"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: idx * 0.1 }}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
-                    {item.type}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setItems(items.filter((_, i) => i !== idx))}
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                    <input
-                      type="text"
-                      placeholder="Enter item description..."
-                      value={item.description}
-                      onChange={(e) => handleChangeItem(idx, "description", e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors duration-200"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
-                    <input
-                      type="number"
-                      placeholder="0.0"
-                      value={item.weight || ""}
-                      onChange={(e) => handleChangeItem(idx, "weight", Number.parseFloat(e.target.value) || 0)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors duration-200"
-                      min="0"
-                      step="0.1"
-                    />
-                  </div>
-                </div>
-              </motion.div>
-            ))}
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto">
+        <motion.div
+          className="p-4 sm:p-6 pb-24 space-y-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
+                <Package className="w-4 h-4" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-slate-800">
+                Choose Item Types
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {itemTypes.map(({ name }) => (
+                <Button
+                  key={name}
+                  variant="outline"
+                  className="h-12 text-sm rounded-xl border-2 border-slate-200 hover:border-teal-600 hover:bg-teal-50 hover:text-teal-700 transition-all duration-200 font-medium bg-white active:scale-95"
+                  onClick={() => handleAddItem(name)}
+                >
+                  {name}
+                </Button>
+              ))}
+            </div>
+            {items.length > 0 && (
+              <p className="text-sm text-slate-500 mt-4 text-center">
+                {items.length}/6 items added
+              </p>
+            )}
           </div>
-        </div>
-      )}
 
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Truck className="w-5 h-5 text-teal-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Select Shipping Type</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          <label className="relative">
-            <input
-              type="radio"
-              name="shipping"
-              value="FAST"
-              checked={shippingType === "FAST"}
-              onChange={() => setShippingType("FAST")}
-              className="sr-only"
-            />
-            <div
-              className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                shippingType === "FAST"
-                  ? "border-teal-600 bg-teal-50 ring-2 ring-teal-200"
-                  : "border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold text-gray-900">Fast Express</h4>
-                  <p className="text-sm text-gray-600">2–3 days delivery</p>
-                </div>
-                <div
-                  className={`w-4 h-4 rounded-full border-2 ${
-                    shippingType === "FAST" ? "border-teal-600 bg-teal-600" : "border-gray-300"
-                  }`}
-                >
-                  {shippingType === "FAST" && <div className="w-full h-full rounded-full bg-white scale-50"></div>}
-                </div>
+          {items.length > 0 && (
+            <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-800 mb-4">
+                Item Details
+              </h3>
+              <div className="space-y-4">
+                {items.map((item, idx) => (
+                  <motion.div
+                    key={idx}
+                    className="bg-slate-50 border border-slate-200 rounded-xl p-4"
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: idx * 0.1 }}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-100 text-teal-800">
+                        {item.type}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          setItems(items.filter((_, i) => i !== idx))
+                        }
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 h-8 w-8 rounded-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Description
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter item description..."
+                          value={item.description}
+                          onChange={(e) =>
+                            handleChangeItem(idx, "description", e.target.value)
+                          }
+                          className="w-full px-3 py-3 text-base border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors duration-200"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">
+                          Weight (kg)
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="0.0"
+                          value={item.weight || ""}
+                          onChange={(e) =>
+                            handleChangeItem(
+                              idx,
+                              "weight",
+                              Number.parseFloat(e.target.value) || 0
+                            )
+                          }
+                          className="w-full px-3 py-3 text-base border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-colors duration-200"
+                          min="0"
+                          step="0.1"
+                        />
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
               </div>
             </div>
-          </label>
-          <label className="relative">
-            <input
-              type="radio"
-              name="shipping"
-              value="MEDIUM"
-              checked={shippingType === "MEDIUM"}
-              onChange={() => setShippingType("MEDIUM")}
-              className="sr-only"
-            />
-            <div
-              className={`p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 ${
-                shippingType === "MEDIUM"
-                  ? "border-teal-600 bg-teal-50 ring-2 ring-teal-200"
-                  : "border-gray-200 hover:border-gray-300"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-semibold text-gray-900">Standard</h4>
-                  <p className="text-sm text-gray-600">6–7 days delivery</p>
-                </div>
+          )}
+
+          <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
+                <Truck className="w-4 h-4" />
+              </div>
+              <h3 className="text-lg sm:text-xl font-bold text-slate-800">
+                Select Shipping Type
+              </h3>
+            </div>
+            <div className="space-y-3">
+              <label className="relative block">
+                <input
+                  type="radio"
+                  name="shipping"
+                  value="FAST"
+                  checked={shippingType === "FAST"}
+                  onChange={() => setShippingType("FAST")}
+                  className="sr-only"
+                />
                 <div
-                  className={`w-4 h-4 rounded-full border-2 ${
-                    shippingType === "MEDIUM" ? "border-teal-600 bg-teal-600" : "border-gray-300"
+                  className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                    shippingType === "FAST"
+                      ? "border-teal-600 bg-teal-50 ring-2 ring-teal-200"
+                      : "border-slate-200 hover:border-slate-300"
                   }`}
                 >
-                  {shippingType === "MEDIUM" && <div className="w-full h-full rounded-full bg-white scale-50"></div>}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-base font-semibold text-slate-900">
+                        Fast Express
+                      </h4>
+                      <p className="text-sm text-slate-600">
+                        2–3 days delivery
+                      </p>
+                    </div>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 ${
+                        shippingType === "FAST"
+                          ? "border-teal-600 bg-teal-600"
+                          : "border-slate-300"
+                      }`}
+                    >
+                      {shippingType === "FAST" && (
+                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </label>
+              <label className="relative block">
+                <input
+                  type="radio"
+                  name="shipping"
+                  value="MEDIUM"
+                  checked={shippingType === "MEDIUM"}
+                  onChange={() => setShippingType("MEDIUM")}
+                  className="sr-only"
+                />
+                <div
+                  className={`p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                    shippingType === "MEDIUM"
+                      ? "border-teal-600 bg-teal-50 ring-2 ring-teal-200"
+                      : "border-slate-200 hover:border-slate-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-base font-semibold text-slate-900">
+                        Standard
+                      </h4>
+                      <p className="text-sm text-slate-600">
+                        6–7 days delivery
+                      </p>
+                    </div>
+                    <div
+                      className={`w-5 h-5 rounded-full border-2 ${
+                        shippingType === "MEDIUM"
+                          ? "border-teal-600 bg-teal-600"
+                          : "border-slate-300"
+                      }`}
+                    >
+                      {shippingType === "MEDIUM" && (
+                        <div className="w-full h-full rounded-full bg-white scale-50"></div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-r from-teal-50 to-teal-100 border-2 border-teal-200 rounded-2xl p-4 sm:p-6 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">$</span>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-teal-700 uppercase tracking-wide">
+                    Total Amount
+                  </p>
+                  <p className="text-xs text-teal-600">
+                    Estimated shipping cost
+                  </p>
                 </div>
               </div>
+              <div className="text-right">
+                <div className="text-2xl sm:text-3xl font-bold text-teal-900">
+                  {loadingPrice ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin w-5 h-5 border-2 border-teal-600 border-t-transparent rounded-full"></div>
+                      <span className="text-lg">Calculating...</span>
+                    </div>
+                  ) : (
+                    `$${totalPrice || 0.0}`
+                  )}
+                </div>
+                {!loadingPrice && totalPrice && (
+                  <p className="text-sm text-teal-600 font-medium">
+                    Final price
+                  </p>
+                )}
+              </div>
             </div>
-          </label>
-        </div>
+          </div>
+        </motion.div>
       </div>
 
-      <Button
-        className="w-full h-12 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors duration-200 shadow-sm hover:shadow-md"
-        onClick={handleSubmit}
-      >
-        Continue to Next Step
-      </Button>
-    </motion.div>
+      <div className="sticky bottom-20 left-0 right-0 bg-white border-t border-slate-200 p-4 sm:p-6 shadow-lg safe-area-inset-bottom mb-20 md:mb-0">
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full bg-gradient-to-r from-teal-600 to-teal-700 text-white hover:from-teal-700 hover:to-teal-800 shadow-lg py-4 text-base font-semibold rounded-2xl transition-all duration-200 active:scale-95"
+          onClick={handleSubmit}
+        >
+          <ArrowRight className="h-5 w-5 mr-2" />
+          Continue to Confirmation
+        </Button>
+      </div>
+    </div>
   )
 }

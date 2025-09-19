@@ -18,8 +18,22 @@ import {
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useUserInfo } from "../queries/user/user.query"
+import { useOrders } from "../queries/order/order"
+import { MobileHeader } from "@/components/app-header"
+import { MobileFooter } from "@/components/app-footer"
 
 export default function ProfilePage() {
+  const { data: user, isLoading, isError } = useUserInfo()
+  const { data: orders = [], isLoading: loadingOrders } = useOrders()
+  console.log(user)
+  // --- Derive stats from orders ---
+  const inProgress = orders.filter(
+    (o: any) => o.status !== "DELIVERED" && o.status !== "CANCELLED"
+  ).length
+  const delivered = orders.filter((o: any) => o.status === "DELIVERED").length
+  const sent = orders.length
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -35,6 +49,14 @@ export default function ProfilePage() {
     visible: { y: 0, opacity: 1 },
   }
 
+  if (isLoading) {
+    return <div className="p-6">Loading profile...</div>
+  }
+
+  if (isError || !user) {
+    return <div className="p-6 text-red-500">Failed to load profile</div>
+  }
+
   return (
     <motion.div
       className="min-h-screen bg-white text-teal-600 p-4 md:p-6 lg:p-8 flex flex-col"
@@ -42,16 +64,7 @@ export default function ProfilePage() {
       initial="hidden"
       animate="visible"
     >
-      {/* Header */}
-      <motion.header className="flex items-center mb-8" variants={itemVariants}>
-        <Link
-          href="#"
-          className="flex items-center text-teal-600 hover:text-teal-800"
-        >
-          <ArrowLeft className="h-6 w-6 mr-2" />
-          <span className="text-lg font-medium">Back</span>
-        </Link>
-      </motion.header>
+      <MobileHeader />
 
       {/* Profile Section */}
       <motion.div
@@ -61,8 +74,8 @@ export default function ProfilePage() {
         <div className="relative w-28 h-28 mb-4">
           <div className="w-full h-full rounded-full overflow-hidden border-4 border-teal-600">
             <Image
-              src="/placeholder.svg?height=112&width=112"
-              alt="Profile picture"
+              src={user.photoUrl || "/placeholder.svg?height=112&width=112"}
+              alt={user.name}
               width={112}
               height={112}
               className="object-cover w-full h-full"
@@ -77,10 +90,10 @@ export default function ProfilePage() {
             <span className="sr-only">Edit profile picture</span>
           </Button>
         </div>
-        <h2 className="text-2xl font-bold text-teal-600 mb-1">CHUON Raksa</h2>
+        <h2 className="text-2xl font-bold text-teal-600 mb-1">{user.name}</h2>
         <div className="flex items-center text-teal-600 text-base">
           <MapPin className="h-4 w-4 mr-1" />
-          <span>phnom penh</span>
+          <span>{user.address || "No address set"}</span>
           <ChevronDown className="h-4 w-4 ml-1" />
         </div>
       </motion.div>
@@ -91,15 +104,15 @@ export default function ProfilePage() {
         variants={itemVariants}
       >
         <Card className="bg-teal-100 text-teal-800 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-          <span className="text-2xl font-bold">0</span>
+          <span className="text-2xl font-bold">{inProgress}</span>
           <span className="text-sm">Progress delivery</span>
         </Card>
         <Card className="bg-teal-100 text-teal-800 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-          <span className="text-2xl font-bold">12</span>
+          <span className="text-2xl font-bold">{sent}</span>
           <span className="text-sm">Parcels sent</span>
         </Card>
         <Card className="bg-teal-100 text-teal-800 rounded-xl p-4 flex flex-col items-center justify-center text-center">
-          <span className="text-2xl font-bold">30</span>
+          <span className="text-2xl font-bold">{delivered}</span>
           <span className="text-sm">Parcels completed</span>
         </Card>
       </motion.div>
@@ -167,12 +180,7 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Footer */}
-      <motion.p
-        className="text-center text-teal-400 text-sm mt-auto"
-        variants={itemVariants}
-      >
-        App version 1.0.0
-      </motion.p>
+      <MobileFooter />
     </motion.div>
   )
 }
