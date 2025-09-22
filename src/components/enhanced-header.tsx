@@ -13,9 +13,7 @@ export function EnhancedHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState("")
   const isAuthPage =
-    pathname === "/login" ||
-    pathname === "/register" ||
-    pathname === "/dashboard"
+    pathname === "/login" || pathname === "/signup" || pathname === "/home"
 
   const navLinks = [
     { name: "How it Works", href: "#how-it-works" },
@@ -25,7 +23,6 @@ export function EnhancedHeader() {
   ]
 
   const smoothScrollTo = (elementId: string) => {
-    // If we're not on the homepage, navigate there first
     if (pathname !== "/") {
       window.location.href = `/${elementId}`
       return
@@ -33,7 +30,7 @@ export function EnhancedHeader() {
 
     const element = document.getElementById(elementId.replace("#", ""))
     if (element) {
-      const headerOffset = 80 // Account for sticky header height
+      const headerOffset = 80 
       const elementPosition = element.getBoundingClientRect().top
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset
 
@@ -44,7 +41,7 @@ export function EnhancedHeader() {
     }
   }
 
-  // Track active section for highlighting
+ 
   useEffect(() => {
     if (pathname !== "/") return
 
@@ -68,8 +65,7 @@ export function EnhancedHeader() {
     }
 
     window.addEventListener("scroll", handleScroll)
-    handleScroll() // Check initial position
-
+    handleScroll()
     return () => window.removeEventListener("scroll", handleScroll)
   }, [pathname])
 
@@ -134,8 +130,8 @@ export function EnhancedHeader() {
                 </Button>
               </Link>
             )}
-            {pathname !== "/register" && pathname !== "/dashboard" && (
-              <Link href="/register">
+            {pathname !== "/signup" && pathname !== "/dashboard" && (
+              <Link href="/signup">
                 <Button className="bg-teal-600 hover:bg-teal-700 text-white px-6 rounded-full">
                   Sign Up
                 </Button>
@@ -191,7 +187,7 @@ export function EnhancedHeader() {
                     </span>
                     <ThemeToggle />
                   </div>
-                  {pathname !== "/login" && pathname !== "/dashboard" && (
+                  {pathname !== "/login" && pathname !== "/home" && (
                     <Link href="/login" className="w-full">
                       <Button
                         variant="ghost"
@@ -201,7 +197,7 @@ export function EnhancedHeader() {
                       </Button>
                     </Link>
                   )}
-                  {pathname !== "/signup" && pathname !== "/dashboard" && (
+                  {pathname !== "/signup" && pathname !== "/home" && (
                     <Link href="/signup" className="w-full">
                       <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white rounded-full">
                         Sign Up

@@ -124,7 +124,11 @@ export default function NewOrderPage() {
       <MobileHeader />
       <div className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
         <div className="w-full px-4 py-3 sm:px-6 sm:py-4">
-          <OrderHeaderStepper step={step} onBack={handleBack} />
+          <OrderHeaderStepper
+            step={step}
+            maxCompletedStep={step} // user can click only completed/current steps
+            onStepClick={(target) => setStep(target)}
+          />
         </div>
       </div>
 
@@ -141,6 +145,7 @@ export default function NewOrderPage() {
                 className="h-full"
               >
                 <StepOneForm
+                  initialData={step1Data}
                   onNext={(data) => {
                     console.log("Step 1 data:", data)
                     setStep1Data(data)

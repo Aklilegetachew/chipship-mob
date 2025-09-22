@@ -12,7 +12,7 @@ export function MobileHeader() {
           {/* Mobile: Centered logo and title */}
           <div className="flex items-center justify-center gap-2 flex-1 md:flex-none md:justify-start">
             <Package className="h-8 w-8 text-primary" />
-            <h1 className="text-xl font-semibold text-foreground">ShipFast</h1>
+            <h1 className="text-xl font-semibold text-foreground">ChipShip</h1>
           </div>
 
           {/* Desktop: Navigation items */}

@@ -29,23 +29,25 @@ const countryOptions = getNames().map((name: string) => ({
 }))
 
 interface StepOneFormProps {
+  initialData: FormData
   onNext: (data: FormData) => void
 }
 
-export default function StepOneForm({ onNext }: StepOneFormProps) {
+export default function StepOneForm({ initialData, onNext }: StepOneFormProps) {
   const {
     control,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<FormData>({
-    defaultValues: {
-      sender: { name: "", phone: "", address: "", country: "" },
-      receiver: { name: "", phone: "", address: "", country: "" },
-    },
+    defaultValues: initialData,
   })
 
+  useEffect(() => {
+    reset(initialData)
+  }, [initialData, reset])
+
   const onSubmit = (data: FormData) => {
-    console.log("Form submitted:", data)
     onNext(data)
   }
   const [mounted, setMounted] = useState(false)

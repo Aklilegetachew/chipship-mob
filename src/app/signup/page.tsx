@@ -11,6 +11,8 @@ import { useRef, useState } from "react"
 import axiosClient from "@/lib/axiosClient"
 import { useToast } from "@/context/ToastContext"
 import { useRouter } from "next/navigation"
+import { EnhancedHeader } from "@/components/enhanced-header"
+import { Footer } from "@/components/footer"
 
 export default function SignupPage() {
   const [name, setName] = useState("")
@@ -132,97 +134,102 @@ export default function SignupPage() {
   }
 
   return (
-    <motion.div
-      className="min-h-screen flex items-center justify-center bg-white p-4"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-    >
-      <Card className="w-full max-w-md rounded-2xl shadow-lg bg-white text-gray-900">
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold mb-2">Sign Up</CardTitle>
-          <p className="text-gray-500">Create your account to get started!</p>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              disabled={loading}
-            />
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={loading}
-            />
-            <Input
-              id="password"
-              type="password"
-              placeholder="Password (min 8 chars, mixed case, number, special char)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
-            <Input
-              id="confirm-password"
-              type="password"
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
-            {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button
-              type="submit"
-              className="w-full bg-teal-400 text-white hover:bg-teal-500 disabled:opacity-50"
-              disabled={loading}
-            >
-              {loading ? "Creating Account..." : "Sign Up"}
-            </Button>
-          </form>
+    <>
+      <EnhancedHeader />
+      <motion.div
+        className="min-h-screen flex items-center justify-center bg-white p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        {" "}
+        <Card className="w-full max-w-md rounded-2xl shadow-lg bg-white text-gray-900">
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl font-bold mb-2">Sign Up</CardTitle>
+            <p className="text-gray-500">Create your account to get started!</p>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              <Input
+                id="name"
+                type="text"
+                placeholder="Full Name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                disabled={loading}
+              />
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={loading}
+              />
+              <Input
+                id="password"
+                type="password"
+                placeholder="Password (min 8 chars, mixed case, number, special char)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+              <Input
+                id="confirm-password"
+                type="password"
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                disabled={loading}
+              />
+              {error && <p className="text-sm text-red-500">{error}</p>}
+              <Button
+                type="submit"
+                className="w-full bg-teal-400 text-white hover:bg-teal-500 disabled:opacity-50"
+                disabled={loading}
+              >
+                {loading ? "Creating Account..." : "Sign Up"}
+              </Button>
+            </form>
 
-          <div className="mt-4 text-center">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-gray-500">
-                  Or continue with
-                </span>
+            <div className="mt-4 text-center">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">
+                    Or continue with
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div className="mt-4 text-center">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGoogleSignup}
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? "Signing up..." : "Sign Up with Google"}
-            </Button>
-          </div>
+            <div className="mt-4 text-center">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleGoogleSignup}
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? "Signing up..." : "Sign Up with Google"}
+              </Button>
+            </div>
 
-          <div className="mt-6 text-center text-sm text-gray-600">
-            Already have an account?{" "}
-            <Link href="/login" className="text-teal-600 hover:underline">
-              Login
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
-    </motion.div>
+            <div className="mt-6 text-center text-sm text-gray-600">
+              Already have an account?{" "}
+              <Link href="/login" className="text-teal-600 hover:underline">
+                Login
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+      <Footer />
+    </>
   )
 }

@@ -41,7 +41,7 @@ export default function LoginPage() {
       sessionStorage.setItem("authToken", token);
 
       showSuccess("Login successful! Redirecting...");
-      setTimeout(() => router.push("/dashboard"), 1200);
+      setTimeout(() => router.push("/home"), 1200);
     } catch (error: any) {
 
       showError("Login failed", error.message || "");

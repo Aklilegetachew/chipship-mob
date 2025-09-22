@@ -8,7 +8,7 @@ export function MobileFooter() {
   const pathname = usePathname()
 
   const navItems = [
-    { href: "/", icon: Home, label: "Home" },
+    { href: "/home", icon: Home, label: "Home" },
     { href: "/add-order", icon: Plus, label: "Add Order" },
     { href: "/history", icon: History, label: "History" },
     { href: "/profile", icon: User, label: "Profile" },
