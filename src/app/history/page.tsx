@@ -1,157 +1,191 @@
 "use client"
 
-import {
-  Package,
-  Search,
-  Calendar,
-  MapPin,
-  Truck,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-} from "lucide-react"
+import { useState } from "react"
+import { ArrowLeft, Package, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
 import { useOrders } from "../queries/order/order"
+
 import { MobileFooter } from "@/components/app-footer"
 import { MobileHeader } from "@/components/app-header"
 
-export default function HistoryPage() {
-  const { data: shipments = [], isLoading, isError } = useOrders()
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "delivered":
-        return <CheckCircle className="h-4 w-4 text-green-600" />
-      case "in-transit":
-        return <Truck className="h-4 w-4 text-blue-600" />
-      case "processing":
-        return <Clock className="h-4 w-4 text-yellow-600" />
-      case "cancelled":
-        return <AlertCircle className="h-4 w-4 text-red-600" />
-      default:
-        return <Package className="h-4 w-4 text-muted-foreground" />
-    }
-  }
-  console.log("Shipment", shipments)
+// Mock data from the provided JSON
+
+type TabType = "sending" | "traveling"
+type FilterType = "all" | "in-transit" | "delivered" | "pending"
+
+export default function ShipmentHistory() {
+  const [activeTab, setActiveTab] = useState<TabType>("sending")
+  const [activeFilter, setActiveFilter] = useState<FilterType>("all")
+  const { data: shipmentsData = [], isLoading, isError } = useOrders()
   const getStatusBadge = (status: string) => {
-    const variants = {
-      delivered: "bg-green-100 text-green-800 border-green-200",
-      "in-transit": "bg-blue-100 text-blue-800 border-blue-200",
-      processing: "bg-yellow-100 text-yellow-800 border-yellow-200",
-      cancelled: "bg-red-100 text-red-800 border-red-200",
+    switch (status.toLowerCase()) {
+      case "pending":
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-orange-100 text-orange-600 hover:bg-orange-100"
+          >
+            Pending
+          </Badge>
+        )
+      case "delivered":
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-green-100 text-green-600 hover:bg-green-100"
+          >
+            Delivered
+          </Badge>
+        )
+      case "in-transit":
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-green-100 text-green-600 hover:bg-green-100"
+          >
+            In Transit
+          </Badge>
+        )
+      default:
+        return <Badge variant="secondary">{status}</Badge>
     }
-
-    return (
-      <Badge className={`${variants[status as keyof typeof variants]} border`}>
-        {status.charAt(0).toUpperCase() + status.slice(1).replace("-", " ")}
-      </Badge>
-    )
   }
 
-  if (isLoading) {
-    return <div className="p-8 text-center">Loading shipments...</div>
+  const getPackageIcon = (description: string) => {
+    if (description.includes("fragile") || description.includes("valuable")) {
+      return <Package className="w-8 h-8 text-green-600" />
+    }
+    return <Package className="w-8 h-8 text-gray-600" />
   }
 
-  if (isError) {
-    return (
-      <div className="p-8 text-center text-red-500">
-        Failed to load shipments
-      </div>
-    )
-  }
+  const filteredShipments = shipmentsData.filter((shipment: any) => {
+    if (activeFilter === "all") return true
+    if (activeFilter === "pending")
+      return shipment.status.toLowerCase() === "pending"
+    if (activeFilter === "delivered")
+      return shipment.status.toLowerCase() === "delivered"
+    if (activeFilter === "in-transit")
+      return shipment.status.toLowerCase() === "in-transit"
+    return true
+  })
 
   return (
-    <div className="min-h-screen bg-background">
-      <MobileHeader />
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-foreground mb-2">
-            Shipment History
-          </h2>
-          <p className="text-muted-foreground">
-            View and manage all your past shipments
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-50 pb-20">
+      {/* Header */}
+      <div className="bg-white border-b">
+        <MobileHeader />
 
-        {/* Search and Filter Section */}
-        <div className="mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by tracking number or destination..."
-                className="pl-10"
-              />
-            </div>
-            <Button variant="outline" className="sm:w-auto bg-transparent">
-              <Calendar className="h-4 w-4 mr-2" />
-              Filter by Date
-            </Button>
-          </div>
+        {/* Tabs */}
+        <div className="flex border-b">
+          <button
+            onClick={() => setActiveTab("sending")}
+            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "sending"
+                ? "border-green-600 text-green-600"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Sending
+          </button>
+          <button
+            onClick={() => setActiveTab("traveling")}
+            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "traveling"
+                ? "border-green-600 text-green-600"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Traveling
+          </button>
         </div>
+      </div>
 
-        {/* Shipments List */}
-        <div className="space-y-4">
-          {shipments.map((shipment: any) => (
-            <Card
-              key={shipment.id}
-              className="border-border hover:shadow-lg transition-shadow cursor-pointer"
-            >
-              <CardContent className="p-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  {/* Left Section */}
-                  <div className="flex items-start gap-4">
-                    <div className="p-2 rounded-lg bg-muted flex-shrink-0">
-                      {getStatusIcon(shipment.status)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-2">
-                        <h3 className="font-semibold text-foreground">
-                          {shipment.trackingNumber || shipment.id}
-                        </h3>
-                        {getStatusBadge(shipment.status)}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-                        <MapPin className="h-4 w-4 flex-shrink-0" />
-                        <span className="truncate">{shipment.destination}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4 flex-shrink-0" />
-                        <span>
-                          {new Date(shipment.date).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </div>
+      {/* Filter Buttons */}
+      <div className="p-4">
+        <div className="flex gap-2 overflow-x-auto">
+          <Button
+            variant={activeFilter === "all" ? "default" : "secondary"}
+            size="sm"
+            onClick={() => setActiveFilter("all")}
+            className={
+              activeFilter === "all" ? "bg-green-600 hover:bg-green-700" : ""
+            }
+          >
+            All
+          </Button>
+          <Button
+            variant={activeFilter === "in-transit" ? "default" : "secondary"}
+            size="sm"
+            onClick={() => setActiveFilter("in-transit")}
+            className={
+              activeFilter === "in-transit"
+                ? "bg-green-600 hover:bg-green-700"
+                : ""
+            }
+          >
+            In Transit
+          </Button>
+          <Button
+            variant={activeFilter === "delivered" ? "default" : "secondary"}
+            size="sm"
+            onClick={() => setActiveFilter("delivered")}
+            className={
+              activeFilter === "delivered"
+                ? "bg-green-600 hover:bg-green-700"
+                : ""
+            }
+          >
+            Delivered
+          </Button>
+          <Button
+            variant={activeFilter === "pending" ? "default" : "secondary"}
+            size="sm"
+            onClick={() => setActiveFilter("pending")}
+            className={
+              activeFilter === "pending"
+                ? "bg-green-600 hover:bg-green-700"
+                : ""
+            }
+          >
+            Pending
+          </Button>
+        </div>
+      </div>
+
+      {/* Shipment List */}
+      <div className="px-4 space-y-3">
+        {filteredShipments.map((shipment: any) => (
+          <Link key={shipment.id} href={`/shipment/${shipment.id}`}>
+            <div className="bg-white rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                    {getPackageIcon(shipment.packageDescription)}
                   </div>
-
-                  {/* Right Section */}
-                  <div className="flex flex-col sm:items-end gap-2">
-                    <div className="text-right">
-                      <p className="font-semibold text-foreground">
-                        {shipment.cost}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {shipment.trackingNumber}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        Track
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        Details
-                      </Button>
-                    </div>
+                  <div>
+                    <h3 className="font-medium text-balance">
+                      {shipment.packageDescription.split(",")[0]} Package
+                    </h3>
+                    <p className="text-sm text-muted-foreground text-pretty">
+                      {shipment.senderAddress.split(" ").slice(0, 2).join(" ")}{" "}
+                      →{" "}
+                      {shipment.recipientAddress
+                        .split(" ")
+                        .slice(0, 2)
+                        .join(" ")}
+                    </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </main>
+                <div className="text-right">
+                  {getStatusBadge(shipment.status)}
+                </div>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
       <MobileFooter />
     </div>
   )

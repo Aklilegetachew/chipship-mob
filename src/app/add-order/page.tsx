@@ -107,7 +107,7 @@ export default function NewOrderPage() {
         termsAccepted: true,
         items: finalOrder.items,
       }
-
+      console.log("Submitting order with payload:", payload)
       const res = await axiosClient.post("/order", payload)
 
       console.log("Shipment created:", payload)

@@ -129,35 +129,29 @@ export default function ProfilePage() {
         variants={itemVariants}
       >
         <Link
-          href="#"
+          href="/profile/editprofile"
           className="flex items-center py-3 px-2 hover:bg-teal-50 rounded-lg"
         >
           <User className="h-6 w-6 mr-4 text-teal-600" />
           <span className="text-lg font-medium">Account</span>
         </Link>
+
         <Link
-          href="#"
-          className="flex items-center py-3 px-2 hover:bg-teal-50 rounded-lg"
-        >
-          <Home className="h-6 w-6 mr-4 text-teal-600" />
-          <span className="text-lg font-medium">Address</span>
-        </Link>
-        <Link
-          href="#"
+          href="/profile/contactus"
           className="flex items-center py-3 px-2 hover:bg-teal-50 rounded-lg"
         >
           <Headphones className="h-6 w-6 mr-4 text-teal-600" />
           <span className="text-lg font-medium">Contact Us</span>
         </Link>
         <Link
-          href="#"
+          href="/profile/terms"
           className="flex items-center py-3 px-2 hover:bg-teal-50 rounded-lg"
         >
           <HelpCircle className="h-6 w-6 mr-4 text-teal-600" />
-          <span className="text-lg font-medium">About Us</span>
+          <span className="text-lg font-medium">Terms and Service</span>
         </Link>
         <Link
-          href="#"
+          href="/profile/settings"
           className="flex items-center py-3 px-2 hover:bg-teal-50 rounded-lg"
         >
           <Settings className="h-6 w-6 mr-4 text-teal-600" />

@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
@@ -8,6 +7,7 @@ export function useOrders() {
   return useQuery({
     queryKey: ["orders"],
     queryFn: orderApi.getOrders,
+    staleTime: Infinity,
   })
 }
 
@@ -15,6 +15,6 @@ export function useOrder(orderId: number) {
   return useQuery({
     queryKey: ["order", orderId],
     queryFn: () => orderApi.getOrderById(orderId),
-    enabled: !!orderId, 
+    enabled: !!orderId,
   })
 }
