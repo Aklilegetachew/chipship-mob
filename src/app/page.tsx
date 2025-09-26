@@ -11,6 +11,7 @@ import { CTASection } from "@/components/cta-section"
 import { Footer } from "@/components/footer"
 
 import { Toast } from "primereact/toast"
+import InstallPrompt from "@/components/installPrompt"
 
 export default function HomePage() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
@@ -48,6 +49,7 @@ export default function HomePage() {
       <Toast ref={toast} />
       <EnhancedHeader />
       <HeroSection />
+      <InstallPrompt />
       <HowItWorksSection />
       <BenefitsSection />
       <TrustSafetySection />
