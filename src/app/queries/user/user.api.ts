@@ -7,8 +7,23 @@ interface ForgotPasswordParams {
 }
 
 export async function getUserInfo() {
-  const response = await axiosClient.get("/auth/userinfo")
-  return response.data
+  try {
+    const response = await axiosClient.get("/auth/userinfo")
+    return response.data
+  } catch (error) {
+    console.error("Error fetching user info:", error)
+    throw error
+  }
+}
+
+export async function updateUserInfo(data: any) {
+  try {
+    const response = await axiosClient.patch("/auth/update-profile", data)
+    return response.data
+  } catch (error) {
+    console.error("Error updating user info:", error)
+    throw error
+  }
 }
 
 export async function forgotpassword({ email }: ForgotPasswordParams) {

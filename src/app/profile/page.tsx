@@ -22,11 +22,25 @@ import { useUserInfo } from "../queries/user/user.query"
 import { useOrders } from "../queries/order/order"
 import { MobileHeader } from "@/components/app-header"
 import { MobileFooter } from "@/components/app-footer"
+import { useState } from "react"
+import { auth } from "@/lib/firebase"
+import { signOut } from "@firebase/auth"
 
 export default function ProfilePage() {
   const { data: user, isLoading, isError } = useUserInfo()
   const { data: orders = [], isLoading: loadingOrders } = useOrders()
-  console.log(user)
+  const [showLogoutModal, setShowLogoutModal] = useState(false)
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      sessionStorage.removeItem("authToken")
+      window.location.href = "/login" // redirect to login page
+    } catch (error) {
+      console.error("Logout failed", error)
+      alert("Failed to logout. Try again.")
+    }
+  }
   // --- Derive stats from orders ---
   const inProgress = orders.filter(
     (o: any) => o.status !== "DELIVERED" && o.status !== "CANCELLED"
@@ -105,15 +119,15 @@ export default function ProfilePage() {
       >
         <Card className="bg-teal-100 text-teal-800 rounded-xl p-4 flex flex-col items-center justify-center text-center">
           <span className="text-2xl font-bold">{inProgress}</span>
-          <span className="text-sm">Progress delivery</span>
+          <span className="text-sm">In progress</span>
         </Card>
         <Card className="bg-teal-100 text-teal-800 rounded-xl p-4 flex flex-col items-center justify-center text-center">
           <span className="text-2xl font-bold">{sent}</span>
-          <span className="text-sm">Parcels sent</span>
+          <span className="text-sm">Total Order</span>
         </Card>
         <Card className="bg-teal-100 text-teal-800 rounded-xl p-4 flex flex-col items-center justify-center text-center">
           <span className="text-2xl font-bold">{delivered}</span>
-          <span className="text-sm">Parcels completed</span>
+          <span className="text-sm">Completed</span>
         </Card>
       </motion.div>
 
@@ -160,18 +174,41 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Logout Section */}
-      <motion.div
-        className="bg-white border border-teal-200 rounded-2xl shadow-md p-4 mb-8"
-        variants={itemVariants}
-      >
+      <div className="bg-white border border-teal-200 rounded-2xl shadow-md p-4 mb-8">
         <Button
           variant="ghost"
           className="w-full flex justify-start py-3 px-2 text-lg font-medium text-teal-600 hover:bg-teal-50 rounded-lg"
+          onClick={() => setShowLogoutModal(true)}
         >
           <LogOut className="h-6 w-6 mr-4 text-teal-600" />
           Logout
         </Button>
-      </motion.div>
+      </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-xl p-6 w-11/12 max-w-sm">
+            <h2 className="text-lg font-bold text-gray-900 mb-4">
+              Are you sure you want to logout?
+            </h2>
+            <div className="flex justify-end space-x-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowLogoutModal(false)}
+              >
+                No
+              </Button>
+              <Button
+                className="bg-red-600 text-white hover:bg-red-700"
+                onClick={handleLogout}
+              >
+                Yes, Logout
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <MobileFooter />

@@ -7,6 +7,7 @@ import { getNames } from "country-list"
 import { ArrowRight } from "lucide-react"
 import { Button } from "./ui/button"
 import { useEffect, useState } from "react"
+import { useUserInfo } from "@/app/queries/user/user.query"
 
 interface FormData {
   sender: {
@@ -34,10 +35,12 @@ interface StepOneFormProps {
 }
 
 export default function StepOneForm({ initialData, onNext }: StepOneFormProps) {
+  const { data: user } = useUserInfo()
   const {
     control,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<FormData>({
     defaultValues: initialData,
@@ -51,20 +54,89 @@ export default function StepOneForm({ initialData, onNext }: StepOneFormProps) {
     onNext(data)
   }
   const [mounted, setMounted] = useState(false)
+  const [senderIsMe, setSenderIsMe] = useState(false)
+  const [receiverIsMe, setReceiverIsMe] = useState(false)
   useEffect(() => setMounted(true), [])
+
+  const fillSender = (on: boolean) => {
+    setSenderIsMe(on)
+    setReceiverIsMe(false) // prevent both sections being "Me"
+    if (on && user) {
+      setValue("sender.name", user.name || "")
+      setValue("sender.phone", user.phone || "")
+      setValue("sender.address", user.address || "")
+      setValue("sender.country", user.country || "")
+    } else {
+      setValue("sender.name", "")
+      setValue("sender.phone", "")
+      setValue("sender.address", "")
+      setValue("sender.country", "")
+    }
+  }
+
+  const fillReceiver = (on: boolean) => {
+    setReceiverIsMe(on)
+    setSenderIsMe(false) // prevent both sections being "Me"
+    if (on && user) {
+      setValue("receiver.name", user.name || "")
+      setValue("receiver.phone", user.phone || "")
+      setValue("receiver.address", user.address || "")
+      setValue("receiver.country", user.country || "")
+    } else {
+      setValue("receiver.name", "")
+      setValue("receiver.phone", "")
+      setValue("receiver.address", "")
+      setValue("receiver.country", "")
+    }
+  }
 
   if (!mounted) return null
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
         <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 pb-24">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
-              1
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
+                1
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-800">
+                Sender Details
+              </h2>
             </div>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-800">
-              Sender Details
-            </h2>
+            <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={senderIsMe}
+                onChange={(e) => fillSender(e.target.checked)}
+                disabled={receiverIsMe}
+                className="sr-only" // hide the native checkbox
+              />
+              <span
+                className={`w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center border-2 ${
+                  senderIsMe
+                    ? "bg-teal-600 border-teal-600"
+                    : "border-gray-300 bg-white"
+                } transition-all duration-200`}
+              >
+                {senderIsMe && (
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
+              </span>
+              My Address
+            </label>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 mb-6 space-y-4 border border-slate-100">
@@ -194,13 +266,48 @@ export default function StepOneForm({ initialData, onNext }: StepOneFormProps) {
             />
           </div>
 
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
-              2
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-teal-600 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
+                2
+              </div>
+              <h2 className="text-lg sm:text-xl font-bold text-slate-800">
+                Receiver Details
+              </h2>
             </div>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-800">
-              Receiver Details
-            </h2>
+            <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={receiverIsMe}
+                onChange={(e) => fillReceiver(e.target.checked)}
+                disabled={senderIsMe} // can't both be "Me"
+                className="sr-only" // hide the native checkbox
+              />
+              <span
+                className={`w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center border-2 ${
+                  receiverIsMe
+                    ? "bg-teal-600 border-teal-600"
+                    : "border-gray-300 bg-white"
+                } transition-all duration-200`}
+              >
+                {receiverIsMe && (
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={3}
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                )}
+              </span>
+              My Address
+            </label>
           </div>
 
           <div className="bg-white rounded-2xl shadow-sm p-4 sm:p-6 space-y-4 border border-slate-100">

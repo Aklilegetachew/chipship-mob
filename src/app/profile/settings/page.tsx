@@ -43,9 +43,7 @@ export default function Settings() {
           <div className="w-10"></div>
         </div>
 
-     
         <div className="p-6 space-y-8">
-
           <section>
             <h2 className="text-lg font-semibold text-gray-900 mb-4">
               Notifications
@@ -65,6 +63,7 @@ export default function Settings() {
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     notifications.push ? "bg-green-600" : "bg-gray-200"
                   }`}
+                  disabled
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -88,6 +87,7 @@ export default function Settings() {
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     notifications.email ? "bg-green-600" : "bg-gray-200"
                   }`}
+                  disabled
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -111,6 +111,7 @@ export default function Settings() {
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     notifications.sms ? "bg-green-600" : "bg-gray-200"
                   }`}
+                  disabled
                 >
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
@@ -165,16 +166,19 @@ export default function Settings() {
                 <ChevronRight className="w-5 h-5 text-gray-400" />
               </Link>
               <Link
-                href="/profile/edit"
+                href="/profile/editprofile"
                 className="flex items-center justify-between py-2"
               >
                 <span className="font-medium text-gray-900">Edit Profile</span>
                 <ChevronRight className="w-5 h-5 text-gray-400" />
               </Link>
-              <button className="flex items-center justify-between py-2 w-full text-left">
+              <Link
+                href="/profile/settings/deleteaccount"
+                className="flex items-center justify-between py-2"
+              >
                 <span className="font-medium text-red-500">Delete Account</span>
                 <ChevronRight className="w-5 h-5 text-gray-400" />
-              </button>
+              </Link>
             </div>
           </section>
 

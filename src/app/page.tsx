@@ -1,5 +1,5 @@
-'use client'
-import { useEffect, useRef, useState } from 'react'
+"use client"
+import { useEffect, useRef, useState } from "react"
 import { EnhancedHeader } from "@/components/enhanced-header"
 import { HeroSection } from "@/components/hero-section"
 import { HowItWorksSection } from "@/components/how-it-works-section"
@@ -9,26 +9,35 @@ import { TestimonialsSection } from "@/components/testimonials-section"
 import { FAQSection } from "@/components/faq-section"
 import { CTASection } from "@/components/cta-section"
 import { Footer } from "@/components/footer"
-import type { Metadata } from "next"
-import { Toast } from 'primereact/toast'
+
+import { Toast } from "primereact/toast"
 
 export default function HomePage() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
 
   useEffect(() => {
-    window.addEventListener('beforeinstallprompt', (e) => {
+    window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault()
       setDeferredPrompt(e)
     })
   }, [])
 
-  const toast = useRef<Toast>(null);
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker
+        .register("/sw.js")
+        .then(() => console.log("SW registered ✅"))
+        .catch((err) => console.error("SW registration failed:", err))
+    }
+  }, [])
+
+  const toast = useRef<Toast>(null)
 
   const handleInstall = async () => {
     if (deferredPrompt) {
       deferredPrompt.prompt()
       const { outcome } = await deferredPrompt.userChoice
-      if (outcome === 'accepted') {
+      if (outcome === "accepted") {
         setDeferredPrompt(null)
       }
     }
@@ -46,9 +55,7 @@ export default function HomePage() {
       <FAQSection />
       <CTASection />
       <Footer />
-      {deferredPrompt && (
-        <button onClick={handleInstall}>Install App</button>
-      )}
+      {deferredPrompt && <button onClick={handleInstall}>Install App</button>}
     </main>
   )
 }

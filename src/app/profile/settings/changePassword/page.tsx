@@ -6,13 +6,21 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 
+import {
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+} from "firebase/auth"
+import { useToast } from "@/context/ToastContext"
+import { auth } from "@/lib/firebase"
+
 export default function ChangePassword() {
   const [formData, setFormData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   })
-
+  const { showSuccess, showError } = useToast()
   const [showPasswords, setShowPasswords] = useState({
     current: false,
     new: false,
@@ -42,10 +50,59 @@ export default function ChangePassword() {
   const togglePasswordVisibility = (field: keyof typeof showPasswords) => {
     setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }))
   }
+  const handleSave = async () => {
+    if (
+      !formData.currentPassword ||
+      !formData.newPassword ||
+      !formData.confirmPassword
+    ) {
+      showError("Please fill all fields")
+      return
+    }
 
-  const handleSave = () => {
-    // Handle password change logic here
-    console.log("Changing password:", formData)
+    if (formData.newPassword !== formData.confirmPassword) {
+      showError("New password and confirm password do not match")
+      return
+    }
+
+    // Check password requirements
+    if (!Object.values(passwordRequirements).every(Boolean)) {
+      showError("New password does not meet all requirements")
+      return
+    }
+
+    const user = auth.currentUser
+    if (!user || !user.email) {
+      showError("No logged-in user found")
+      return
+    }
+
+    try {
+      // Re-authenticate with current password
+      const credential = EmailAuthProvider.credential(
+        user.email,
+        formData.currentPassword
+      )
+      await reauthenticateWithCredential(user, credential)
+
+      // Update password
+      await updatePassword(user, formData.newPassword)
+      showSuccess("Password updated successfully!")
+
+      // Clear form
+      setFormData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      })
+    } catch (error: any) {
+      console.error(error)
+      if (error.code === "auth/wrong-password") {
+        showError("Current password is incorrect")
+      } else {
+        showError(error.message || "Failed to update password")
+      }
+    }
   }
 
   return (
