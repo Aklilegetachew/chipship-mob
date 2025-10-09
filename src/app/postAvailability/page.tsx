@@ -1,3 +1,5 @@
+"use client"
+
 import { MobileFooter } from "@/components/app-footer"
 import { PostAvailabilityForm } from "@/components/post-availability-form"
 

@@ -1,13 +1,20 @@
 "use client"
 import { useForm, Controller } from "react-hook-form"
-import Select from "react-select"
-import { getNames } from "country-list"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft, Plane, Luggage, Tag } from "lucide-react"
 import { useRouter } from "next/navigation"
 import CitySelect from "./citySelect"
+import { useCreateTravelerRoute } from "@/app/queries/traveler/travel.query"
+import { useToast } from "@/context/ToastContext"
 
 interface PostAvailabilityFormProps {
   onBack?: () => void
@@ -25,10 +32,12 @@ interface FormData {
   deadline: string
 }
 
-const countryOptions = getNames().map((name: string) => ({
-  value: name,
-  label: name,
-}))
+const countryOptions = [
+  { value: "AF", label: "Afghanistan" },
+  { value: "AL", label: "Albania" },
+  { value: "DZ", label: "Algeria" },
+  // ... other country options ...
+]
 
 const luggageTypeOptions = [
   { value: "carry-on", label: "Carry-on" },
@@ -43,6 +52,8 @@ export function PostAvailabilityForm({
 }: PostAvailabilityFormProps) {
   const router = useRouter()
 
+  const { mutateAsync, status } = useCreateTravelerRoute()
+  const isLoading = status === "pending"
   const {
     control,
     handleSubmit,
@@ -60,14 +71,26 @@ export function PostAvailabilityForm({
       deadline: "",
     },
   })
-
+  const { showSuccess, showError } = useToast()
   const startingDate = watch("startingDate")
 
-  const onFormSubmit = (data: FormData) => {
-    if (onSubmit) {
-      onSubmit(data)
-    } else {
-      console.log("Form submitted:", data)
+  // ✅ submit handler
+  const onFormSubmit = async (data: FormData) => {
+    try {
+   
+        await mutateAsync({
+          fromLocation: data.startingLocation,
+          toLocation: data.reachingLocation,
+          departureDate: data.startingDate,
+          arrivalDate: data.reachingDate,
+          availableSpace: parseFloat(data.luggageSize),
+          pricePerKg: parseFloat(data.cost),
+        })
+        showSuccess("Traveler route posted successfully!")
+        router.push("/traveler/routes") // navigate to routes list or dashboard
+    } catch (error: any) {
+      console.error("Error posting traveler route:", error)
+      showError(error?.message || "Failed to post traveler route")
     }
   }
 
@@ -80,40 +103,42 @@ export function PostAvailabilityForm({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-background border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-4 flex items-center gap-4">
+      <header className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
+        <div className="max-w-5xl mx-auto px-3 md:px-6 lg:px-8 py-3 md:py-4 flex items-center gap-3 md:gap-4">
           <button
             onClick={handleBack}
-            className="p-2 -ml-2 hover:bg-accent rounded-lg transition-colors"
+            className="p-2.5 md:p-2 -ml-1 md:-ml-2 hover:bg-accent rounded-lg transition-all duration-200 hover:scale-105 active:scale-95"
             aria-label="Go back"
           >
-            <ArrowLeft className="w-6 h-6" />
+            <ArrowLeft className="w-6 h-6 md:w-6 md:h-6" />
           </button>
-          <h1 className="text-xl md:text-2xl font-semibold text-balance">
+          <h1 className="text-lg md:text-2xl font-semibold text-balance">
             Post Availability
           </h1>
         </div>
       </header>
 
       {/* Form Content */}
-      <main className="max-w-5xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-10 pb-8">
-        <p className="text-muted-foreground text-center mb-8 md:mb-12 text-pretty text-base md:text-lg">
+      <main className="max-w-5xl mx-auto px-0 md:px-6 lg:px-8 py-4 md:py-12 pb-32 md:pb-32">
+        <p className="text-muted-foreground text-center mb-6 md:mb-14 text-pretty text-sm md:text-lg max-w-2xl mx-auto px-4 md:px-0">
           Share your flight details and available luggage space.
         </p>
 
         <form
           onSubmit={handleSubmit(onFormSubmit)}
-          className="space-y-8 md:space-y-10"
+          className="space-y-4 md:space-y-12"
         >
           {/* Flight Info Section */}
-          <section className="space-y-4 md:space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-teal-600 rounded-lg">
+          <section className="space-y-5 md:space-y-6 p-4 md:p-8 bg-card rounded-none md:rounded-xl border-y md:border border-border shadow-none md:shadow-sm md:hover:shadow-md transition-shadow duration-300">
+            <div className="flex items-center gap-3 mb-1 md:mb-2">
+              <div className="p-2 md:p-2.5 bg-teal-600 rounded-lg shadow-sm">
                 <Plane className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-lg md:text-xl font-semibold">Flight Info</h2>
+              <h2 className="text-base md:text-xl font-semibold">
+                Flight Info
+              </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -133,10 +158,10 @@ export function PostAvailabilityForm({
                   },
                 }}
                 render={({ field }) => (
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2.5">
                     <Label
                       htmlFor="startingDate"
-                      className="text-muted-foreground font-normal"
+                      className="text-sm md:text-sm font-medium text-foreground"
                     >
                       Starting Date
                     </Label>
@@ -144,10 +169,11 @@ export function PostAvailabilityForm({
                       {...field}
                       id="startingDate"
                       type="date"
-                      className="w-full"
+                      className="w-full h-12 md:h-11 text-base md:text-sm transition-all duration-200 focus:ring-2 focus:ring-teal-600/20 hover:border-teal-600/50"
                     />
                     {errors.startingDate && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-red-500 text-xs md:text-sm flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
                         {errors.startingDate.message}
                       </p>
                     )}
@@ -171,10 +197,10 @@ export function PostAvailabilityForm({
                   },
                 }}
                 render={({ field }) => (
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2.5">
                     <Label
                       htmlFor="reachingDate"
-                      className="text-muted-foreground font-normal"
+                      className="text-sm md:text-sm font-medium text-foreground"
                     >
                       Reaching Date
                     </Label>
@@ -182,11 +208,12 @@ export function PostAvailabilityForm({
                       {...field}
                       id="reachingDate"
                       type="date"
-                      className="w-full"
+                      className="w-full h-12 md:h-11 text-base md:text-sm transition-all duration-200 focus:ring-2 focus:ring-teal-600/20 hover:border-teal-600/50"
                       min={startingDate || undefined}
                     />
                     {errors.reachingDate && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-red-500 text-xs md:text-sm flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
                         {errors.reachingDate.message}
                       </p>
                     )}
@@ -199,10 +226,10 @@ export function PostAvailabilityForm({
                 control={control}
                 rules={{ required: "Starting location is required" }}
                 render={({ field }) => (
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2.5">
                     <Label
                       htmlFor="startingLocation"
-                      className="text-muted-foreground font-normal"
+                      className="text-sm md:text-sm font-medium text-foreground"
                     >
                       Starting Location
                     </Label>
@@ -212,7 +239,8 @@ export function PostAvailabilityForm({
                       placeholder="Search starting city..."
                     />
                     {errors.startingLocation && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-red-500 text-xs md:text-sm flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
                         {errors.startingLocation.message}
                       </p>
                     )}
@@ -225,10 +253,10 @@ export function PostAvailabilityForm({
                 control={control}
                 rules={{ required: "Reaching location is required" }}
                 render={({ field }) => (
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2.5">
                     <Label
                       htmlFor="reachingLocation"
-                      className="text-muted-foreground font-normal"
+                      className="text-sm md:text-sm font-medium text-foreground"
                     >
                       Reaching Location
                     </Label>
@@ -238,7 +266,8 @@ export function PostAvailabilityForm({
                       placeholder="Search destination city..."
                     />
                     {errors.reachingLocation && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-red-500 text-xs md:text-sm flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
                         {errors.reachingLocation.message}
                       </p>
                     )}
@@ -249,12 +278,14 @@ export function PostAvailabilityForm({
           </section>
 
           {/* Luggage Info Section */}
-          <section className="space-y-4 md:space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-teal-600 rounded-lg">
+          <section className="space-y-5 md:space-y-6 p-4 md:p-8 bg-card rounded-none md:rounded-xl border-y md:border border-border shadow-none md:shadow-sm md:hover:shadow-md transition-shadow duration-300">
+            <div className="flex items-center gap-3 mb-1 md:mb-2">
+              <div className="p-2 md:p-2.5 bg-teal-600 rounded-lg shadow-sm">
                 <Luggage className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-lg md:text-xl font-semibold">Luggage Info</h2>
+              <h2 className="text-base md:text-xl font-semibold">
+                Luggage Info
+              </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -263,73 +294,32 @@ export function PostAvailabilityForm({
                 control={control}
                 rules={{ required: "Luggage type is required" }}
                 render={({ field }) => (
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2.5">
                     <Label
                       htmlFor="luggageType"
-                      className="text-muted-foreground font-normal"
+                      className="text-sm md:text-sm font-medium text-foreground"
                     >
                       Luggage Type
                     </Label>
-                    <Select
-                      {...field}
-                      options={luggageTypeOptions}
-                      className="text-foreground"
-                      classNamePrefix="select"
-                      placeholder="Select luggage type..."
-                      onChange={(val) => field.onChange(val?.value || "")}
-                      value={
-                        luggageTypeOptions.find(
-                          (opt) => opt.value === field.value
-                        ) || null
-                      }
-                      isClearable
-                      styles={{
-                        control: (base, state) => ({
-                          ...base,
-                          backgroundColor: "hsl(var(--background))",
-                          border: state.isFocused
-                            ? "2px solid hsl(var(--ring))"
-                            : "1px solid hsl(var(--border))",
-                          borderRadius: "0.5rem",
-                          padding: "0.25rem",
-                          fontSize: "0.875rem",
-                          minHeight: "2.5rem",
-                          boxShadow: "none",
-                          "&:hover": {
-                            borderColor: "hsl(var(--border))",
-                          },
-                        }),
-                        menu: (base) => ({
-                          ...base,
-                          backgroundColor: "hsl(var(--background))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "0.5rem",
-                          boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                        }),
-                        option: (base, state) => ({
-                          ...base,
-                          backgroundColor: state.isFocused
-                            ? "hsl(var(--accent))"
-                            : "hsl(var(--background))",
-                          color: "hsl(var(--foreground))",
-                          cursor: "pointer",
-                        }),
-                        singleValue: (base) => ({
-                          ...base,
-                          color: "hsl(var(--foreground))",
-                        }),
-                        input: (base) => ({
-                          ...base,
-                          color: "hsl(var(--foreground))",
-                        }),
-                        placeholder: (base) => ({
-                          ...base,
-                          color: "hsl(var(--muted-foreground))",
-                        }),
-                      }}
-                    />
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="w-full h-12 md:h-11 text-base md:text-sm transition-all duration-200 focus:ring-2 focus:ring-teal-600/20 hover:border-teal-600/50">
+                        <SelectValue placeholder="Select luggage type..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {luggageTypeOptions.map((option) => (
+                          <SelectItem
+                            key={option.value}
+                            value={option.value}
+                            className="text-base md:text-sm"
+                          >
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     {errors.luggageType && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-red-500 text-xs md:text-sm flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
                         {errors.luggageType.message}
                       </p>
                     )}
@@ -352,10 +342,10 @@ export function PostAvailabilityForm({
                   },
                 }}
                 render={({ field }) => (
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2.5">
                     <Label
                       htmlFor="luggageSize"
-                      className="text-muted-foreground font-normal"
+                      className="text-sm md:text-sm font-medium text-foreground"
                     >
                       Luggage Size (in kilos)
                     </Label>
@@ -364,12 +354,13 @@ export function PostAvailabilityForm({
                       id="luggageSize"
                       type="number"
                       placeholder="e.g., 23"
-                      className="w-full"
+                      className="w-full h-12 md:h-11 text-base md:text-sm transition-all duration-200 focus:ring-2 focus:ring-teal-600/20 hover:border-teal-600/50"
                       min="0"
                       step="0.1"
                     />
                     {errors.luggageSize && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-red-500 text-xs md:text-sm flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
                         {errors.luggageSize.message}
                       </p>
                     )}
@@ -380,12 +371,12 @@ export function PostAvailabilityForm({
           </section>
 
           {/* Offer Info Section */}
-          <section className="space-y-4 md:space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-teal-600 rounded-lg">
+          <section className="space-y-5 md:space-y-6 p-4 md:p-8 bg-card rounded-none md:rounded-xl border-y md:border border-border shadow-none md:shadow-sm md:hover:shadow-md transition-shadow duration-300">
+            <div className="flex items-center gap-3 mb-1 md:mb-2">
+              <div className="p-2 md:p-2.5 bg-teal-600 rounded-lg shadow-sm">
                 <Tag className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-lg md:text-xl font-semibold">Offer Info</h2>
+              <h2 className="text-base md:text-xl font-semibold">Offer Info</h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
@@ -397,10 +388,10 @@ export function PostAvailabilityForm({
                   min: { value: 0, message: "Cost cannot be negative" },
                 }}
                 render={({ field }) => (
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2.5">
                     <Label
                       htmlFor="cost"
-                      className="text-muted-foreground font-normal"
+                      className="text-sm md:text-sm font-medium text-foreground"
                     >
                       Cost for Taking Luggage ($)
                     </Label>
@@ -409,12 +400,13 @@ export function PostAvailabilityForm({
                       id="cost"
                       type="number"
                       placeholder="e.g., 50"
-                      className="w-full"
+                      className="w-full h-12 md:h-11 text-base md:text-sm transition-all duration-200 focus:ring-2 focus:ring-teal-600/20 hover:border-teal-600/50"
                       min="0"
                       step="0.01"
                     />
                     {errors.cost && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-red-500 text-xs md:text-sm flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
                         {errors.cost.message}
                       </p>
                     )}
@@ -438,10 +430,10 @@ export function PostAvailabilityForm({
                   },
                 }}
                 render={({ field }) => (
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:space-y-2.5">
                     <Label
                       htmlFor="deadline"
-                      className="text-muted-foreground font-normal"
+                      className="text-sm md:text-sm font-medium text-foreground"
                     >
                       Deadline for Accepting Pickup
                     </Label>
@@ -449,11 +441,12 @@ export function PostAvailabilityForm({
                       {...field}
                       id="deadline"
                       type="date"
-                      className="w-full"
+                      className="w-full h-12 md:h-11 text-base md:text-sm transition-all duration-200 focus:ring-2 focus:ring-teal-600/20 hover:border-teal-600/50"
                       max={startingDate || undefined}
                     />
                     {errors.deadline && (
-                      <p className="text-red-500 text-sm">
+                      <p className="text-red-500 text-xs md:text-sm flex items-center gap-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <span className="inline-block w-1 h-1 rounded-full bg-red-500"></span>
                         {errors.deadline.message}
                       </p>
                     )}
@@ -464,13 +457,14 @@ export function PostAvailabilityForm({
           </section>
 
           {/* Submit Button */}
-          <div className="flex justify-center md:justify-end">
+          <div className="flex justify-end md:justify-end pt-4 mb-8 mr-2">
             <Button
               type="submit"
-              className="w-full md:w-auto md:min-w-[200px] bg-teal-600 hover:bg-teal-700 text-white py-6 text-base font-medium"
+              className="w-[200px] md:w-auto md:min-w-[200px] bg-teal-600 hover:bg-teal-700 text-white py-6 text-base font-medium shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               size="lg"
+              disabled={isLoading} // disable while loading
             >
-              Post
+              {isLoading ? "Posting..." : "Post Availability"}
             </Button>
           </div>
         </form>

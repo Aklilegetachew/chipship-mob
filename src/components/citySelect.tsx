@@ -1,10 +1,8 @@
 "use client"
 
 import AsyncSelect from "react-select/async"
-import { useCallback } from "react"
-import { useDebounce } from "use-debounce"
+import { useCallback, useRef } from "react"
 
-import { useCitySearch } from "@/app/queries/other/other.query"
 import { searchCities } from "@/app/queries/other/other.api"
 
 interface CityOption {
@@ -23,18 +21,41 @@ export default function CitySelect({
   onChange,
   placeholder,
 }: CitySelectProps) {
-  const [debouncedInput, setDebouncedInput] = useDebounce("", 100)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const controllerRef = useRef<AbortController | null>(null)
 
   const loadOptions = useCallback(
-    async (inputValue: string): Promise<CityOption[]> => {
-      console.log("debouncedInput", inputValue)
-      //   setDebouncedInput(inputValue)
-      if (!inputValue) return []
+    (inputValue: string, callback: (options: CityOption[]) => void) => {
+      // Clear previous timeout and abort previous request
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+      if (controllerRef.current) {
+        controllerRef.current.abort()
+      }
 
-      //   const { data } = await useCitySearch(inputValue)
-      const data = await searchCities(inputValue)
-      console.log("data", data)
-      return (data ?? []).map((city: any) => ({ label: city, value: city }))
+      // Set new timeout
+      timeoutRef.current = setTimeout(async () => {
+        if (!inputValue || inputValue.length < 2) {
+          callback([])
+          return
+        }
+
+        try {
+          controllerRef.current = new AbortController()
+          const data = await searchCities(inputValue)
+          const options = (data ?? []).map((city: string) => ({
+            label: city,
+            value: city,
+          }))
+          callback(options)
+        } catch (error: any) {
+          if (error.name !== "AbortError") {
+            console.error("Error fetching cities:", error)
+            callback([])
+          }
+        }
+      }, 500) // Wait 500ms after user stops typing
     },
     []
   )
@@ -43,10 +64,10 @@ export default function CitySelect({
     <AsyncSelect
       cacheOptions
       defaultOptions
-      loadOptions={loadOptions as any}
+      loadOptions={loadOptions}
       onChange={(option) => onChange(option?.value || "")}
       value={value ? { label: value, value } : null}
-      placeholder={placeholder || "Type a city name..."}
+      placeholder={placeholder || "Type a city name (min 2 chars)..."}
       isClearable
       styles={{
         control: (base, state) => ({
